@@ -32,7 +32,7 @@ def run_phase1_experiment():
     torch.manual_seed(42)
     np.random.seed(42)
     
-    print("🚧 Running Phase 1: Causal Fine-Tuning Engine")
+    print("Running Phase 1: Causal Fine-Tuning Engine")
     print("=" * 50)
     
     # 1. Generate synthetic dataset
@@ -90,16 +90,16 @@ def run_phase1_experiment():
     final_baseline_loss = baseline_test_losses[-1]
     final_causal_loss = causal_test_losses[-1]
     
-    print(f"✅ Baseline model final test loss: {final_baseline_loss:.4f}")
-    print(f"✅ Causal model final test loss: {final_causal_loss:.4f}")
+    print(f"Baseline model final test loss: {final_baseline_loss:.4f}")
+    print(f"Causal model final test loss: {final_causal_loss:.4f}")
     
     if final_causal_loss < final_baseline_loss:
         improvement = ((final_baseline_loss - final_causal_loss) / final_baseline_loss * 100)
-        print(f"🎯 Causal model achieved {improvement:.2f}% improvement!")
+        print(f"Causal model achieved {improvement:.2f}% improvement!")
     else:
-        print("📊 Results show baseline performance (may vary with random seed)")
+        print("Results show baseline performance (may vary with random seed)")
     
-    print("\n🚀 Ready for Phase 2: Counterfactual learning and dynamic DAG discovery!")
+    print("\nReady for Phase 2: Counterfactual learning and dynamic DAG discovery!")
     
     return {
         'baseline_train_losses': baseline_train_losses,

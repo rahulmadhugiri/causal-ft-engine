@@ -1,17 +1,17 @@
-# 🧠 Causal Fine-Tuning Engine
+# Causal Fine-Tuning Engine
 
-A neural network framework that injects **do-operator-based causal reasoning** directly into neural architectures, reducing data requirements for model training through causal interventions.
+A neural network framework that injects do-operator-based causal reasoning directly into neural architectures, reducing data requirements for model training through causal interventions.
 
-## 🎯 Project Goals
+## Project Goals
 
 Rather than adding interventions at the data level, this engine modifies the neural architecture itself to:
 
-- ✅ Inject `do(X=v)`-style logic into the forward pass
-- ✅ Block gradients flowing to parents of intervened nodes  
-- ✅ Optionally rewire a runtime DAG during forward/backward passes
-- ✅ Enable causal consistency and counterfactual reasoning
+- Inject `do(X=v)`-style logic into the forward pass
+- Block gradients flowing to parents of intervened nodes  
+- Optionally rewire a runtime DAG during forward/backward passes
+- Enable causal consistency and counterfactual reasoning
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 causal-finetuning-engine/
@@ -28,7 +28,7 @@ causal-finetuning-engine/
 └── README.md                 # This file
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -59,7 +59,7 @@ x = torch.randn(10, 3)  # Batch of inputs
 y_pred = model(x, interventions={0: (do_mask, do_values)})
 ```
 
-## 🔬 Key Components
+## Key Components
 
 ### 1. CausalUnit
 A neural network layer that implements do-operator interventions:
@@ -77,18 +77,18 @@ Manages causal graph structure and edge masking:
 Collection of causal-aware loss functions:
 - **Intervention Loss**: Optionally ignores loss on intervened variables
 - **Counterfactual Loss**: Encourages correct "what if" predictions  
-- **Causal Consistency**: Enforces that do(X=v) results in X=v
+- **Causal Consistency**: Enforces that `do(X=v)` results in X=v
 - **Regularization**: Promotes sparse, interpretable causal structures
 
-## 📊 Phase 1 Results
+## Phase 1 Results
 
 Our toy example demonstrates the engine working on synthetic data where `y = x1 + 2*x2 - 3*x3 + noise`:
 
 **Key Findings:**
-- ✅ Causal models successfully respond to `do(x2=0.5)` interventions
-- ✅ Gradient blocking prevents information flow to intervened variables
-- ✅ Models learn to approximate true causal coefficients
-- ✅ Training converges with causal-aware loss functions
+- Causal models successfully respond to `do(x2=0.5)` interventions
+- Gradient blocking prevents information flow to intervened variables
+- Models learn to approximate true causal coefficients
+- Training converges with causal-aware loss functions
 
 **Experimental Setup:**
 - **Dataset**: 1000 samples with known causal relationships
@@ -96,7 +96,7 @@ Our toy example demonstrates the engine working on synthetic data where `y = x1 
 - **Comparison**: Standard MLP vs CausalMLP
 - **Metrics**: MSE loss, coefficient recovery, intervention accuracy
 
-## 🧪 Running the Demo
+## Running the Demo
 
 Execute the complete Phase 1 experiment:
 
@@ -112,11 +112,11 @@ The experiment includes:
 5. **Visualization**: Training curves saved as PNG files
 
 This approach provides:
-- ✅ **Cleaner dev cycle** (no notebook clutter)
-- ✅ **Reproducible experiments** (consistent results)
-- ✅ **Professional structure** (real engine, not just research demo)
+- **Cleaner dev cycle** (no notebook clutter)
+- **Reproducible experiments** (consistent results)
+- **Professional structure** (real engine, not just research demo)
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Gradient Blocking Implementation
 ```python
@@ -141,7 +141,7 @@ masked_loss = loss * loss_mask
 return masked_loss.sum() / loss_mask.sum()
 ```
 
-## 🚀 Future Roadmap
+## Future Roadmap
 
 ### Phase 2: Advanced Causal Reasoning
 - **Counterfactual Learning**: "What if X had been Y?"
@@ -155,7 +155,7 @@ return masked_loss.sum() / loss_mask.sum()
 - **Scientific Discovery**: Automated causal hypothesis testing
 - **Policy Optimization**: Intervention effect prediction
 
-## 📚 Dependencies
+## Dependencies
 
 - `torch`: Core neural network framework
 - `numpy`: Numerical computations
@@ -164,7 +164,7 @@ return masked_loss.sum() / loss_mask.sum()
 - `jupyter`: Interactive development
 - `matplotlib`: Visualization
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Areas of interest:
 - Novel causal architectures
@@ -173,14 +173,10 @@ We welcome contributions! Areas of interest:
 - Performance optimizations
 - Documentation improvements
 
-## 📄 License
+## License
 
 [Add your license here]
 
-## 📧 Contact
+## Contact
 
 [Add contact information]
-
----
-
-*Built with ❤️ for advancing causal reasoning in neural networks*
