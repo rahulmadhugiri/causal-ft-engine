@@ -153,6 +153,40 @@ class DifferentiableDAG(nn.Module):
             sparsity_loss: L1 norm of adjacency matrix
         """
         return torch.sum(torch.abs(adjacency))
+    
+    def get_structure_loss(self, X: torch.Tensor, lambda_acyclic: float = 1.0, 
+                          lambda_sparse: float = 0.01):
+        """
+        Compute total structure learning loss combining reconstruction, acyclicity, and sparsity.
+        
+        Args:
+            X: Input data
+            lambda_acyclic: Weight for acyclicity constraint
+            lambda_sparse: Weight for sparsity constraint
+            
+        Returns:
+            Dictionary with individual loss components and total loss
+        """
+        # Forward pass
+        X_reconstructed, adjacency = self.forward(X, hard_adjacency=False)
+        
+        # Individual loss components
+        reconstruction_loss = F.mse_loss(X_reconstructed, X)
+        acyclicity_loss = self.acyclicity_constraint(adjacency)
+        sparsity_loss = self.sparsity_loss(adjacency)
+        
+        # Total loss
+        total_loss = (reconstruction_loss + 
+                     lambda_acyclic * torch.abs(acyclicity_loss) +
+                     lambda_sparse * sparsity_loss)
+        
+        return {
+            'reconstruction_loss': reconstruction_loss,
+            'acyclicity_loss': acyclicity_loss,
+            'sparsity_loss': sparsity_loss,
+            'total_loss': total_loss,
+            'adjacency': adjacency
+        }
 
 
 class StructureLearner:

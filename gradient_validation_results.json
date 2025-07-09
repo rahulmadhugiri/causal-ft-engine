@@ -1,0 +1,23 @@
+{
+  "basic_forward": {
+    "success": true,
+    "input_shape": [
+      10,
+      2
+    ],
+    "output_shape": [
+      10,
+      1
+    ]
+  },
+  "intervention_forward": {
+    "success": true,
+    "intervention_effect": 0.14521558582782745,
+    "effect_detected": true
+  },
+  "test_gradient_blocking_manual": {
+    "error": "matmul(): argument 'input' (position 1) must be Tensor, not NoneType"
+  },
+  "network_gradient_blocking": {
+    "grad_reduction_ratio": 0.0,
+    "blocking_effective": 

@@ -7,8 +7,128 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engine.causal_unit import CausalMLP
 from engine.loss_functions import CausalLosses
+
+
+def generate_synthetic_data(n_samples=1000, n_nodes=4, graph_type='chain', noise_level=0.3):
+    """
+    Generate synthetic data with known causal relationships.
+    
+    Args:
+        n_samples: Number of samples to generate
+        n_nodes: Number of nodes in the graph
+        graph_type: Type of graph ('chain', 'fork', 'v_structure', 'confounder')
+        noise_level: Standard deviation of noise
+        
+    Returns:
+        X: Input features (n_samples, n_nodes-1)
+        y: Target values (n_samples, 1)
+        true_adjacency: True adjacency matrix (n_nodes-1, n_nodes-1)
+    """
+    np.random.seed(42)
+    torch.manual_seed(42)
+    
+    if graph_type == 'chain':
+        # X1 -> X2 -> X3 -> Y
+        x1 = np.random.randn(n_samples, 1)
+        x2 = 0.8 * x1 + noise_level * np.random.randn(n_samples, 1)
+        x3 = 0.6 * x2 + noise_level * np.random.randn(n_samples, 1)
+        y = 0.5 * x3 + noise_level * np.random.randn(n_samples, 1)
+        
+        X = np.hstack([x1, x2, x3])
+        true_adjacency = np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
+        
+    elif graph_type == 'fork':
+        # X1 -> X2, X1 -> X3, X2 -> Y, X3 -> Y
+        x1 = np.random.randn(n_samples, 1)
+        x2 = 0.7 * x1 + noise_level * np.random.randn(n_samples, 1)
+        x3 = 0.5 * x1 + noise_level * np.random.randn(n_samples, 1)
+        y = 0.4 * x2 + 0.3 * x3 + noise_level * np.random.randn(n_samples, 1)
+        
+        X = np.hstack([x1, x2, x3])
+        true_adjacency = np.array([[0, 1, 1], [0, 0, 0], [0, 0, 0]])
+        
+    elif graph_type == 'v_structure':
+        # X1 -> X3, X2 -> X3, X3 -> Y
+        x1 = np.random.randn(n_samples, 1)
+        x2 = np.random.randn(n_samples, 1)
+        x3 = 0.6 * x1 + 0.5 * x2 + noise_level * np.random.randn(n_samples, 1)
+        y = 0.7 * x3 + noise_level * np.random.randn(n_samples, 1)
+        
+        X = np.hstack([x1, x2, x3])
+        true_adjacency = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 0]])
+        
+    else:  # confounder or default
+        # X1 -> X2, X1 -> X3, X2 -> Y, X3 -> Y
+        x1 = np.random.randn(n_samples, 1)
+        x2 = 0.8 * x1 + noise_level * np.random.randn(n_samples, 1)
+        x3 = 0.6 * x1 + noise_level * np.random.randn(n_samples, 1)
+        y = 0.5 * x2 + 0.4 * x3 + noise_level * np.random.randn(n_samples, 1)
+        
+        X = np.hstack([x1, x2, x3])
+        true_adjacency = np.array([[0, 1, 1], [0, 0, 0], [0, 0, 0]])
+    
+    return X, y, true_adjacency
+
+
+def create_dag_from_edges(edges, n_nodes):
+    """Create adjacency matrix from edge list."""
+    adj = np.zeros((n_nodes, n_nodes))
+    for edge in edges:
+        adj[edge[0], edge[1]] = 1
+    return adj
+
+
+def evaluate_structure_learning(learned_adj, true_adj):
+    """Evaluate structure learning performance."""
+    # Flatten and binarize
+    true_flat = (true_adj.flatten() > 0.5).astype(int)
+    learned_flat = (learned_adj.flatten() > 0.5).astype(int)
+    
+    # Basic metrics
+    tp = np.sum((true_flat == 1) & (learned_flat == 1))
+    fp = np.sum((true_flat == 0) & (learned_flat == 1))
+    fn = np.sum((true_flat == 1) & (learned_flat == 0))
+    tn = np.sum((true_flat == 0) & (learned_flat == 0))
+    
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+    
+    return {'precision': precision, 'recall': recall, 'f1': f1}
+
+
+def evaluate_counterfactual_performance(model, x, y, true_adj):
+    """Evaluate counterfactual performance."""
+    model.eval()
+    effects = []
+    
+    with torch.no_grad():
+        # Original prediction
+        y_original = model(x)
+        
+        # Test several random interventions
+        for _ in range(10):
+            intervention_node = np.random.randint(0, x.shape[1])
+            intervention_value = torch.randn(1) * 2.0
+            
+            # Create intervention
+            intervention_mask = torch.zeros(x.shape[1])
+            intervention_values = torch.zeros(x.shape[1])
+            intervention_mask[intervention_node] = 1.0
+            intervention_values[intervention_node] = intervention_value
+            
+            # Apply intervention
+            interventions = []
+            for i in range(x.shape[0]):
+                interventions.append({'test': (intervention_mask, intervention_values)})
+            
+            y_counterfactual = model(x, interventions=interventions)
+            effect = torch.mean(torch.abs(y_counterfactual - y_original))
+            effects.append(effect.item())
+    
+    return {'mean_effect': np.mean(effects), 'std_effect': np.std(effects)}
+
 
 def generate_causal_data(n_samples=1000, noise_std=0.1):
     """

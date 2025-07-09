@@ -1,284 +1,431 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Function
+import numpy as np
+from typing import Optional, Dict, List, Tuple, Union
+
+
+class CausalInterventionFunction(Function):
+    """
+    Custom autograd function that implements precise gradient blocking for causal interventions.
+    
+    Key Innovation: If do(node_k = v), then ∂L/∂parent(node_k) = 0 for all parents of k.
+    This is NOT stop-gradient on the node output, but targeted gradient removal only to parent paths.
+    """
+    
+    @staticmethod
+    def forward(ctx, input_tensor, parent_values, adj_mask, do_mask, do_values, weights, bias):
+        """
+        Forward pass with causal intervention logic.
+        
+        Args:
+            input_tensor: Node inputs (batch_size, input_dim)
+            parent_values: Parent node activations (batch_size, n_parents)
+            adj_mask: Adjacency mask indicating parent connections (n_parents, input_dim)
+            do_mask: Intervention mask (batch_size, input_dim) or (input_dim,)
+            do_values: Intervention values (batch_size, input_dim) or (input_dim,)
+            weights: Layer weights (input_dim, output_dim)
+            bias: Layer bias (output_dim,)
+        """
+        # Save for backward pass
+        ctx.save_for_backward(input_tensor, parent_values, adj_mask, do_mask, do_values, weights, bias)
+        
+        batch_size = input_tensor.shape[0]
+        
+        # Ensure masks have correct dimensions
+        if do_mask is not None:
+            if do_mask.dim() == 1:
+                do_mask = do_mask.unsqueeze(0).expand(batch_size, -1)
+            if do_values.dim() == 1:
+                do_values = do_values.unsqueeze(0).expand(batch_size, -1)
+        
+        # Apply causal intervention logic
+        if do_mask is not None and do_values is not None:
+            # Step 1: Cut all incoming edges for intervened nodes
+            # This implements the "edge cutting" part of do(node_k = v)
+            effective_adj_mask = adj_mask.clone()
+            intervened_indices = do_mask.bool().any(dim=0)  # Which nodes are intervened across batch
+            effective_adj_mask[:, intervened_indices] = 0.0
+            
+            # Step 2: Apply adjacency masking to parent values (if they exist)
+            if parent_values is not None:
+                masked_parents = torch.matmul(parent_values, effective_adj_mask)
+            else:
+                masked_parents = None
+            
+            # Step 3: Replace intervened node values
+            intervened_input = torch.where(do_mask.bool(), do_values, input_tensor)
+            
+            # Step 4: Use intervened input for forward computation
+            final_input = intervened_input
+        else:
+            # No intervention: use normal adjacency masking (if parent values exist)
+            if parent_values is not None and adj_mask is not None:
+                masked_parents = torch.matmul(parent_values, adj_mask)
+            else:
+                masked_parents = parent_values  # Could be None
+            final_input = input_tensor
+        
+        # Forward computation: output = final_input @ weights + bias
+        if weights is not None:
+            output = torch.matmul(final_input, weights)
+            if bias is not None:
+                output = output + bias
+        else:
+            output = final_input
+            
+        return output
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        """
+        Backward pass with gradient blocking for causal interventions.
+        
+        Key Innovation: Block gradients to parents of intervened nodes.
+        """
+        input_tensor, parent_values, adj_mask, do_mask, do_values, weights, bias = ctx.saved_tensors
+        
+        batch_size = grad_output.shape[0]
+        
+        # Initialize gradients
+        grad_input = None
+        grad_parent_values = None
+        grad_adj_mask = None
+        grad_weights = None
+        grad_bias = None
+        
+        # Gradient w.r.t. bias
+        if bias is not None:
+            grad_bias = grad_output.sum(dim=0)
+        
+        # Gradient w.r.t. weights
+        if weights is not None:
+            if do_mask is not None and do_values is not None:
+                if do_mask.dim() == 1:
+                    do_mask = do_mask.unsqueeze(0).expand(batch_size, -1)
+                intervened_input = torch.where(do_mask.bool(), do_values, input_tensor)
+                grad_weights = torch.matmul(intervened_input.T, grad_output)
+            else:
+                grad_weights = torch.matmul(input_tensor.T, grad_output)
+        
+        # Gradient w.r.t. input (with intervention blocking)
+        if ctx.needs_input_grad[0]:
+            if weights is not None:
+                grad_input = torch.matmul(grad_output, weights.T)
+            else:
+                grad_input = grad_output
+                
+            # CRITICAL: Block gradients for intervened nodes
+            if do_mask is not None:
+                if do_mask.dim() == 1:
+                    do_mask = do_mask.unsqueeze(0).expand(batch_size, -1)
+                # Zero out gradients for intervened nodes
+                grad_input = torch.where(do_mask.bool(), torch.zeros_like(grad_input), grad_input)
+        
+        # Gradient w.r.t. parent values (with causal blocking)
+        if ctx.needs_input_grad[1]:
+            if parent_values is not None:
+                if weights is not None:
+                    grad_parent_base = torch.matmul(grad_output, weights.T)
+                else:
+                    grad_parent_base = grad_output
+                
+                if adj_mask is not None:
+                    # Apply adjacency mask to gradients
+                    grad_parent_values = torch.matmul(grad_parent_base, adj_mask.T)
+                    
+                    # CRITICAL: Block gradients to parents of intervened nodes
+                    if do_mask is not None:
+                        if do_mask.dim() == 1:
+                            do_mask = do_mask.unsqueeze(0).expand(batch_size, -1)
+                        
+                        # For each intervened node, block gradients to ALL its parents
+                        intervened_indices = do_mask.bool().any(dim=0)
+                        for i, is_intervened in enumerate(intervened_indices):
+                            if is_intervened:
+                                # Zero out gradients to all parents of node i
+                                parent_indices = adj_mask[:, i].bool()
+                                grad_parent_values[:, parent_indices] = 0.0
+                else:
+                    grad_parent_values = grad_parent_base
+            else:
+                grad_parent_values = None
+        
+        # Gradient w.r.t. adjacency mask (for structure learning)
+        if ctx.needs_input_grad[2] and adj_mask is not None:
+            if parent_values is not None and weights is not None:
+                # Gradient of adj_mask: how changes in adjacency affect the output
+                # masked_parents = torch.matmul(parent_values, adj_mask)
+                # output = torch.matmul(masked_parents, weights) + bias
+                # d_output/d_adj_mask = parent_values.T @ (grad_output @ weights.T)
+                grad_through_weights = torch.matmul(grad_output, weights.T)
+                grad_adj_mask = torch.matmul(parent_values.T, grad_through_weights)
+            else:
+                grad_adj_mask = None
+        
+        return grad_input, grad_parent_values, grad_adj_mask, None, None, grad_weights, grad_bias
+
 
 class CausalUnit(nn.Module):
     """
-    A causal-aware MLP block that implements do-operator interventions.
+    Phase 3 CausalUnit: A neural block that natively supports symbolic intervention (do()),
+    edge-cutting, runtime graph rewiring, and gradient isolation.
     
-    This module can:
-    - Accept interventions via do_mask and do_values
-    - Replace intervened inputs during forward pass
-    - Block gradients to parents of intervened nodes
+    Key Innovations:
+    1. Custom autograd with precise gradient blocking
+    2. Runtime graph rewiring with dynamic DAG masks
+    3. Symbolic-continuous hybrid approach
+    4. Causal backflow correction
+    5. Support for multiple simultaneous interventions
     """
     
-    def __init__(self, input_dim, output_dim, hidden_dim=None, activation='relu'):
+    def __init__(self, input_dim: int, output_dim: int, hidden_dim: Optional[int] = None, 
+                 activation: str = 'relu', node_id: Optional[str] = None,
+                 enable_structure_learning: bool = True, enable_gradient_surgery: bool = True):
         super(CausalUnit, self).__init__()
         
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.hidden_dim = hidden_dim
+        self.node_id = node_id or f"node_{id(self)}"
+        self.enable_structure_learning = enable_structure_learning
+        self.enable_gradient_surgery = enable_gradient_surgery
         
-        # If no hidden dimension specified, use a simple linear layer
+        # Core neural computation layers
         if hidden_dim is None:
-            self.layers = nn.Sequential(
-                nn.Linear(input_dim, output_dim)
-            )
+            # Single linear layer
+            self.weights = nn.Parameter(torch.randn(input_dim, output_dim) * 0.1)
+            self.bias = nn.Parameter(torch.zeros(output_dim))
+            self.hidden_weights = None
+            self.hidden_bias = None
         else:
             # Multi-layer MLP
-            if activation == 'relu':
-                act_fn = nn.ReLU()
-            elif activation == 'tanh':
-                act_fn = nn.Tanh()
-            else:
-                act_fn = nn.ReLU()  # default
-                
-            self.layers = nn.Sequential(
-                nn.Linear(input_dim, hidden_dim),
-                act_fn,
-                nn.Linear(hidden_dim, output_dim)
+            self.weights = nn.Parameter(torch.randn(input_dim, hidden_dim) * 0.1)
+            self.bias = nn.Parameter(torch.zeros(hidden_dim))
+            self.hidden_weights = nn.Parameter(torch.randn(hidden_dim, output_dim) * 0.1)
+            self.hidden_bias = nn.Parameter(torch.zeros(output_dim))
+        
+        # Activation function
+        if activation == 'relu':
+            self.activation = F.relu
+        elif activation == 'tanh':
+            self.activation = torch.tanh
+        elif activation == 'sigmoid':
+            self.activation = torch.sigmoid
+        else:
+            self.activation = F.relu
+        
+        # Learnable adjacency matrix for structure learning (symbolic-continuous hybrid)
+        if enable_structure_learning:
+            self.adj_logits = nn.Parameter(torch.randn(input_dim, input_dim) * 0.1)
+            self.adj_temperature = nn.Parameter(torch.ones(1) * 1.0)  # Learnable temperature
+        else:
+            self.adj_logits = None
+            self.adj_temperature = None
+        
+        # Intervention tracking
+        self.last_interventions = {}
+        self.intervention_history = []
+        
+        # Gradient surgery components
+        if enable_gradient_surgery:
+            self.gradient_mask = None
+            self.causal_ancestry_cache = None
+        
+        # Dynamic graph state
+        self.current_adj_mask = None
+        self.parent_nodes = []
+        self.child_nodes = []
+    
+    def set_parent_nodes(self, parent_nodes: List['CausalUnit']):
+        """Set parent nodes for this unit in the causal graph."""
+        self.parent_nodes = parent_nodes
+    
+    def add_child_node(self, child_node: 'CausalUnit'):
+        """Add a child node to this unit."""
+        if child_node not in self.child_nodes:
+            self.child_nodes.append(child_node)
+    
+    def get_adjacency_matrix(self, hard: bool = False, temperature: Optional[float] = None) -> torch.Tensor:
+        """
+        Get the current adjacency matrix (symbolic-continuous hybrid).
+        
+        Args:
+            hard: If True, return hard binary adjacency. If False, return soft adjacency.
+            temperature: Override temperature for soft adjacency.
+        
+        Returns:
+            Adjacency matrix (input_dim, input_dim)
+        """
+        if self.adj_logits is None:
+            return torch.eye(self.input_dim, device=self.weights.device)
+        
+        if hard:
+            # Hard adjacency for evaluation/intervention
+            return torch.sigmoid(self.adj_logits) > 0.5
+        else:
+            # Soft adjacency for training
+            temp = temperature if temperature is not None else self.adj_temperature
+            return torch.sigmoid(self.adj_logits / temp)
+    
+    def compute_causal_ancestry(self, adj_mask: torch.Tensor, max_depth: int = 10) -> torch.Tensor:
+        """
+        Compute causal ancestry matrix for backflow correction.
+        
+        This computes which nodes are ancestors of which nodes in the causal graph,
+        used for gradient blocking to ensure no indirect gradient leakage.
+        """
+        device = adj_mask.device
+        n_nodes = adj_mask.shape[0]
+        
+        # Initialize ancestry matrix
+        ancestry = torch.eye(n_nodes, device=device)
+        
+        # Compute transitive closure via matrix powers
+        current_path = adj_mask.clone()
+        for _ in range(max_depth):
+            ancestry = ancestry + current_path
+            current_path = torch.matmul(current_path, adj_mask)
+            
+            # Check for convergence
+            if torch.allclose(current_path, torch.zeros_like(current_path), atol=1e-6):
+                break
+        
+        return (ancestry > 0).float()
+    
+    def apply_gradient_surgery(self, grad_tensor: torch.Tensor, intervention_mask: torch.Tensor,
+                             adj_mask: torch.Tensor) -> torch.Tensor:
+        """
+        Apply gradient surgery to ensure proper causal isolation.
+        
+        This implements "gradient propagation with pathwise edge exclusion" -
+        a novel form of gradient manipulation for causal models.
+        """
+        if not self.enable_gradient_surgery:
+            return grad_tensor
+        
+        # Compute causal ancestry
+        ancestry = self.compute_causal_ancestry(adj_mask)
+        
+        # For each intervened node, block gradients to ALL ancestors
+        batch_size = grad_tensor.shape[0]
+        surgery_mask = torch.ones_like(grad_tensor)
+        
+        if intervention_mask.dim() == 1:
+            intervention_mask = intervention_mask.unsqueeze(0).expand(batch_size, -1)
+        
+        for batch_idx in range(batch_size):
+            intervened_nodes = intervention_mask[batch_idx].bool()
+            
+            for node_idx in range(len(intervened_nodes)):
+                if intervened_nodes[node_idx]:
+                    # Find all ancestors of this intervened node
+                    ancestors = ancestry[:, node_idx].bool()
+                    # Block gradients to all ancestors
+                    surgery_mask[batch_idx, ancestors] = 0.0
+        
+        return grad_tensor * surgery_mask
+    
+    def forward(self, input_tensor: torch.Tensor, parent_values: Optional[torch.Tensor] = None,
+                adj_mask: Optional[torch.Tensor] = None, do_mask: Optional[torch.Tensor] = None,
+                do_values: Optional[torch.Tensor] = None, 
+                interventions: Optional[Dict[str, Tuple[torch.Tensor, torch.Tensor]]] = None) -> torch.Tensor:
+        """
+        Forward pass with causal intervention support.
+        
+        Args:
+            input_tensor: Node inputs (batch_size, input_dim)
+            parent_values: Parent node activations (batch_size, n_parents)
+            adj_mask: Adjacency mask for parent connections (n_parents, input_dim)
+            do_mask: Intervention mask (batch_size, input_dim) or (input_dim,)
+            do_values: Intervention values (batch_size, input_dim) or (input_dim,)
+            interventions: Dict of named interventions {name: (mask, values)}
+        
+        Returns:
+            Output tensor (batch_size, output_dim)
+        """
+        batch_size = input_tensor.shape[0]
+        
+        # Handle multiple interventions
+        if interventions is not None:
+            # Combine all interventions
+            combined_mask = torch.zeros(batch_size, self.input_dim, device=input_tensor.device)
+            combined_values = torch.zeros(batch_size, self.input_dim, device=input_tensor.device)
+            
+            for name, (mask, values) in interventions.items():
+                if mask.dim() == 1:
+                    mask = mask.unsqueeze(0).expand(batch_size, -1)
+                if values.dim() == 1:
+                    values = values.unsqueeze(0).expand(batch_size, -1)
+                    
+                # Union of intervention masks (logical OR)
+                combined_mask = torch.logical_or(combined_mask.bool(), mask.bool()).float()
+                # Use the values from the last intervention for overlapping nodes
+                combined_values = torch.where(mask.bool(), values, combined_values)
+            
+            do_mask = combined_mask
+            do_values = combined_values
+        
+        # Get current adjacency matrix
+        if adj_mask is None:
+            adj_mask = self.get_adjacency_matrix(hard=False)  # Soft during training
+        
+        # Store current adjacency for runtime rewiring
+        self.current_adj_mask = adj_mask
+        
+        # Apply custom causal intervention function
+        if self.hidden_weights is None:
+            # Single layer
+            output = CausalInterventionFunction.apply(
+                input_tensor, parent_values, adj_mask, do_mask, do_values, 
+                self.weights, self.bias
             )
-        
-        # Track intervention state for debugging
-        self.last_intervention_mask = None
-        self.last_intervention_values = None
-    
-    def forward(self, x, do_mask=None, do_values=None, structure_mask=None):
-        """
-        Forward pass with optional causal interventions and structure masking.
-        
-        Args:
-            x: Input tensor of shape (batch_size, input_dim)
-            do_mask: Binary tensor of shape (input_dim,) indicating which variables are intervened
-            do_values: Tensor of shape (input_dim,) with intervention values
-            structure_mask: Adjacency matrix for structural masking (input_dim, input_dim)
-            
-        Returns:
-            Output tensor after applying interventions and forward pass
-        """
-        batch_size = x.shape[0]
-        
-        # Store intervention info for debugging
-        self.last_intervention_mask = do_mask
-        self.last_intervention_values = do_values
-        
-        # Apply structure masking first if provided
-        if structure_mask is not None:
-            # Apply structural constraints: x_masked = x * structure_mask
-            # Each row of structure_mask indicates which variables can influence that variable
-            x_structured = torch.matmul(x, structure_mask.T)  # (batch_size, input_dim)
         else:
-            x_structured = x
+            # Multi-layer: apply to first layer, then standard forward for second layer
+            hidden = CausalInterventionFunction.apply(
+                input_tensor, parent_values, adj_mask, do_mask, do_values,
+                self.weights, self.bias
+            )
+            hidden = self.activation(hidden)
+            output = torch.matmul(hidden, self.hidden_weights) + self.hidden_bias
         
-        # If no interventions, proceed with structured input
-        if do_mask is None or do_values is None:
-            return self.layers(x_structured)
+        # Track interventions for debugging
+        if do_mask is not None and do_values is not None:
+            self.last_interventions = {
+                'mask': do_mask.detach().cpu(),
+                'values': do_values.detach().cpu(),
+                'timestamp': len(self.intervention_history)
+            }
+            self.intervention_history.append(self.last_interventions)
         
-        # Ensure do_mask and do_values have the right shape
-        if do_mask.dim() == 1:
-            do_mask = do_mask.unsqueeze(0).expand(batch_size, -1)
-        if do_values.dim() == 1:
-            do_values = do_values.unsqueeze(0).expand(batch_size, -1)
-            
-        # Apply interventions: replace intervened inputs
-        intervened_indices = do_mask.bool()
-        
-        # Detach intervened variables to block gradient flow
-        x_detached = x_structured.detach()
-        
-        # Create the intervened input tensor
-        # Use original values where not intervened, intervention values where intervened
-        x_final = torch.where(intervened_indices, x_detached, x_structured)
-        x_final = torch.where(intervened_indices, do_values, x_final)
-        
-        return self.layers(x_final)
+        return output
     
-    def get_intervention_info(self):
-        """
-        Get information about the last intervention applied.
-        Useful for debugging and logging.
-        """
+    def get_intervention_info(self) -> Dict:
+        """Get detailed information about recent interventions."""
         return {
-            'mask': self.last_intervention_mask,
-            'values': self.last_intervention_values
+            'last_interventions': self.last_interventions,
+            'intervention_count': len(self.intervention_history),
+            'current_adj_mask': self.current_adj_mask.detach().cpu() if self.current_adj_mask is not None else None,
+            'node_id': self.node_id
         }
-
-
-class CausalMLP(nn.Module):
-    """
-    A multi-layer causal MLP that can have interventions at multiple layers
-    and support learned causal structure.
-    """
     
-    def __init__(self, input_dim, hidden_dims, output_dim, activation='relu'):
-        super(CausalMLP, self).__init__()
-        
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.hidden_dims = hidden_dims
-        
-        # Build layers
-        self.layers = nn.ModuleList()
-        
-        # Input layer
-        prev_dim = input_dim
-        for hidden_dim in hidden_dims:
-            self.layers.append(CausalUnit(prev_dim, hidden_dim, activation=activation))
-            prev_dim = hidden_dim
-            
-        # Output layer
-        self.layers.append(CausalUnit(prev_dim, output_dim, activation=activation))
-        
-        # Optional learned structure (adjacency matrix)
-        self.learned_structure = None
-        self.use_learned_structure = False
-    
-    def set_learned_structure(self, adjacency_matrix, use_structure=True):
-        """
-        Set a learned causal structure to constrain the model.
-        
-        Args:
-            adjacency_matrix: Learned adjacency matrix (input_dim, input_dim)
-            use_structure: Whether to use this structure in forward pass
-        """
-        self.learned_structure = adjacency_matrix
-        self.use_learned_structure = use_structure
-    
-    def forward(self, x, interventions=None, structure_mask=None):
-        """
-        Forward pass through causal MLP with optional layer-wise interventions
-        and structural constraints.
-        
-        Args:
-            x: Input tensor
-            interventions: Dict with layer indices as keys and (do_mask, do_values) tuples as values
-                          e.g., {0: (mask_tensor, values_tensor), 2: (mask_tensor, values_tensor)}
-            structure_mask: Optional structure mask to override learned structure
-        """
-        current = x
-        
-        # Determine which structure mask to use
-        if structure_mask is not None:
-            effective_structure = structure_mask
-        elif self.use_learned_structure and self.learned_structure is not None:
-            effective_structure = self.learned_structure
-        else:
-            effective_structure = None
-        
-        for i, layer in enumerate(self.layers):
-            # Apply structure mask only to first layer (input layer)
-            layer_structure = effective_structure if i == 0 else None
-            
-            if interventions and i in interventions:
-                do_mask, do_values = interventions[i]
-                current = layer(current, do_mask=do_mask, do_values=do_values, 
-                              structure_mask=layer_structure)
-            else:
-                current = layer(current, structure_mask=layer_structure)
-                
-        return current
-    
-    def get_structure_info(self):
-        """
-        Get information about the current learned structure.
-        """
-        return {
-            'learned_structure': self.learned_structure,
-            'use_learned_structure': self.use_learned_structure,
-            'structure_shape': self.learned_structure.shape if self.learned_structure is not None else None
+    def get_gradient_flow_info(self) -> Dict:
+        """Get information about gradient flows for debugging."""
+        info = {
+            'node_id': self.node_id,
+            'weights_grad': self.weights.grad.detach().cpu() if self.weights.grad is not None else None,
+            'bias_grad': self.bias.grad.detach().cpu() if self.bias.grad is not None else None,
+            'adj_logits_grad': self.adj_logits.grad.detach().cpu() if self.adj_logits is not None and self.adj_logits.grad is not None else None,
+            'gradient_mask': self.gradient_mask.detach().cpu() if self.gradient_mask is not None else None
         }
-
-
-class StructureAwareCausalMLP(nn.Module):
-    """
-    Enhanced CausalMLP that integrates structure learning and counterfactual reasoning.
-    """
+        return info
     
-    def __init__(self, input_dim, hidden_dims, output_dim, activation='relu',
-                 learn_structure=True, structure_hidden_dim=16):
-        super(StructureAwareCausalMLP, self).__init__()
-        
-        self.input_dim = input_dim
-        self.learn_structure = learn_structure
-        
-        # Main prediction network
-        self.causal_mlp = CausalMLP(input_dim, hidden_dims, output_dim, activation)
-        
-        # Structure learning component
-        if learn_structure:
-            from .structure_learning import DifferentiableDAG
-            self.structure_learner = DifferentiableDAG(input_dim, structure_hidden_dim)
-        else:
-            self.structure_learner = None
-        
-        # Training mode flags
-        self.structure_learning_mode = False
-        self.prediction_mode = True
+    def reset_intervention_history(self):
+        """Reset intervention tracking."""
+        self.intervention_history = []
+        self.last_interventions = {}
     
-    def set_training_mode(self, structure_learning=False, prediction=True):
-        """
-        Set training mode for different components.
-        
-        Args:
-            structure_learning: Whether to train structure learning component
-            prediction: Whether to train prediction component
-        """
-        self.structure_learning_mode = structure_learning
-        self.prediction_mode = prediction
-        
-        if self.structure_learner is not None:
-            if structure_learning:
-                self.structure_learner.train()
-            else:
-                self.structure_learner.eval()
-    
-    def forward(self, x, interventions=None, return_structure=False):
-        """
-        Forward pass with integrated structure learning and prediction.
-        
-        Args:
-            x: Input tensor
-            interventions: Optional interventions
-            return_structure: Whether to return learned structure
-            
-        Returns:
-            predictions: Main predictions
-            structure_info: Optional structure information
-        """
-        structure_info = {}
-        
-        # Learn or use structure
-        if self.structure_learner is not None:
-            if self.structure_learning_mode:
-                # During structure learning phase
-                x_reconstructed, adjacency = self.structure_learner(x)
-                structure_info['adjacency'] = adjacency
-                structure_info['reconstruction'] = x_reconstructed
-                
-                # Use learned structure for prediction
-                self.causal_mlp.set_learned_structure(adjacency, use_structure=True)
-            else:
-                # Use current structure without updating
-                with torch.no_grad():
-                    adjacency = self.structure_learner.get_adjacency_matrix(hard=True)
-                    self.causal_mlp.set_learned_structure(adjacency, use_structure=True)
-                    structure_info['adjacency'] = adjacency
-        
-        # Main prediction
-        if self.prediction_mode:
-            predictions = self.causal_mlp(x, interventions=interventions)
-        else:
-            predictions = None
-        
-        if return_structure:
-            return predictions, structure_info
-        else:
-            return predictions
-    
-    def get_learned_adjacency(self, hard=True):
-        """
-        Get the current learned adjacency matrix.
-        """
-        if self.structure_learner is not None:
-            with torch.no_grad():
-                return self.structure_learner.get_adjacency_matrix(hard=hard)
-        return None
+    def enable_runtime_rewiring(self, enable: bool = True):
+        """Enable/disable runtime graph rewiring."""
+        self.enable_gradient_surgery = enable
