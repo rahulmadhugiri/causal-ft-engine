@@ -1,0 +1,59 @@
+{
+  "experiment_type": "causal_regularization_tuning",
+  "timestamp": "2025-07-09T14:53:48.866426",
+  "lambda_values_tested": [
+    0.01,
+    0.1,
+    0.5,
+    1.0
+  ],
+  "num_experiments": 4,
+  "key_findings": {
+    "best_test_loss": {
+      "lambda_reg": 0.01,
+      "value": 0.11951397126540542
+    },
+    "highest_violation_penalty": {
+      "lambda_reg": 0.01,
+      "value": 0.0
+    },
+    "best_structure_f1": {
+      "lambda_reg": 0.01,
+      "value": 0.0
+    },
+    "best_cf_accuracy": {
+      "lambda_reg": 0.01,
+      "value": 0.14649204106535763
+    }
+  },
+  "results_summary": [
+    {
+      "lambda_reg": 0.01,
+      "test_loss": 0.11951397126540542,
+      "violation_penalty": 0.0,
+      "structure_f1": 0.0,
+      "cf_accuracy": 0.14649204106535763
+    },
+    {
+      "lambda_reg": 0.1,
+      "test_loss": 0.11951397126540542,
+      "violation_penalty": 0.0,
+      "structure_f1": 0.0,
+      "cf_accuracy": 0.14649204106535763
+    },
+    {
+      "lambda_reg": 0.5,
+      "test_loss": 0.11951397126540542,
+      "violation_penalty": 0.0,
+      "structure_f1": 0.0,
+      "cf_accuracy": 0.14649204106535763
+    },
+    {
+      "lambda_reg": 1.0,
+      "test_loss": 0.11951397126540542,
+      "violation_penalty": 0.0,
+      "structure_f1": 0.0,
+      "cf_accuracy": 0.14649204106535763
+    }
+  ]
+}

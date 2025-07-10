@@ -1,0 +1,141 @@
+{
+  "experiment_info": {
+    "timestamp": "2025-07-09T17:47:14.529769",
+    "dataset_size": 50,
+    "data_fractions": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ],
+    "random_seed": 42
+  },
+  "results": {
+    "0.2": {
+      "standard": {
+        "model_name": "Standard",
+        "train_samples": 8,
+        "test_samples": 2,
+        "accuracy": 0.5,
+        "f1_score": 0.3333333333333333,
+        "eval_loss": 0.6584399342536926,
+        "causal_info": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_samples": 8,
+        "test_samples": 2,
+        "accuracy": 0.5,
+        "f1_score": 0.3333333333333333,
+        "eval_loss": 5.104554653167725,
+        "causal_info": {
+          "violation_penalty": 448.64581298828125,
+          "intervention_count": 4
+        }
+      },
+      "accuracy_diff": 0.0,
+      "f1_diff": 0.0
+    },
+    "0.4": {
+      "standard": {
+        "model_name": "Standard",
+        "train_samples": 16,
+        "test_samples": 4,
+        "accuracy": 0.75,
+        "f1_score": 0.7333333333333334,
+        "eval_loss": 0.6242269277572632,
+        "causal_info": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_samples": 16,
+        "test_samples": 4,
+        "accuracy": 0.25,
+        "f1_score": 0.2,
+        "eval_loss": 135.7152557373047,
+        "causal_info": {
+          "violation_penalty": 13482.68359375,
+          "intervention_count": 10
+        }
+      },
+      "accuracy_diff": -0.5,
+      "f1_diff": -0.5333333333333334
+    },
+    "0.6": {
+      "standard": {
+        "model_name": "Standard",
+        "train_samples": 24,
+        "test_samples": 6,
+        "accuracy": 0.5,
+        "f1_score": 0.48571428571428577,
+        "eval_loss": 0.6796197295188904,
+        "causal_info": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_samples": 24,
+        "test_samples": 6,
+        "accuracy": 0.3333333333333333,
+        "f1_score": 0.25,
+        "eval_loss": 5.8175368309021,
+        "causal_info": {
+          "violation_penalty": 498.47216796875,
+          "intervention_count": 13
+        }
+      },
+      "accuracy_diff": -0.16666666666666669,
+      "f1_diff": -0.23571428571428577
+    },
+    "0.8": {
+      "standard": {
+        "model_name": "Standard",
+        "train_samples": 32,
+        "test_samples": 8,
+        "accuracy": 0.75,
+        "f1_score": 0.75,
+        "eval_loss": 0.6924042701721191,
+        "causal_info": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_samples": 32,
+        "test_samples": 8,
+        "accuracy": 0.375,
+        "f1_score": 0.2727272727272727,
+        "eval_loss": 5.076572418212891,
+        "causal_info": {
+          "violation_penalty": 433.2593994140625,
+          "intervention_count": 14
+        }
+      },
+      "accuracy_diff": -0.375,
+      "f1_diff": -0.4772727272727273
+    },
+    "1.0": {
+      "standard": {
+        "model_name": "Standard",
+        "train_samples": 40,
+        "test_samples": 10,
+        "accuracy": 0.5,
+        "f1_score": 0.45054945054945056,
+        "eval_loss": 0.6695072650909424,
+        "causal_info": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_samples": 40,
+        "test_samples": 10,
+        "accuracy": 0.7,
+        "f1_score": 0.696969696969697,
+        "eval_loss": 6.626317501068115,
+        "causal_info": {
+          "violation_penalty": 602.0195922851562,
+          "intervention_count": 21
+        }
+      },
+      "accuracy_diff": 0.19999999999999996,
+      "f1_diff": 0.24642024642024646
+    }
+  }
+}

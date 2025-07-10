@@ -226,11 +226,24 @@ class CausalUnitEvaluator:
         # Correlation between original and counterfactual predictions
         correlations = []
         for i in range(len(original_predictions)):
-            corr, _ = pearsonr(
-                original_predictions[i].flatten(),
-                counterfactual_predictions[i].flatten()
-            )
-            correlations.append(corr)
+            try:
+                corr, _ = pearsonr(
+                    original_predictions[i].flatten(),
+                    counterfactual_predictions[i].flatten()
+                )
+                # Only add valid correlations (not NaN)
+                if not np.isnan(corr):
+                    correlations.append(corr)
+                else:
+                    # For NaN correlations, use 0.0 as default
+                    correlations.append(0.0)
+            except:
+                # If correlation computation fails, use 0.0
+                correlations.append(0.0)
+        
+        # Handle case where all correlations are invalid
+        if len(correlations) == 0:
+            correlations = [0.0]
         
         return {
             'mean_intervention_effect': np.mean(intervention_effects),
@@ -932,7 +945,9 @@ def main():
         'output_dim': 1,
         'activation': 'relu',
         'enable_structure_learning': True,
-        'enable_gradient_surgery': True
+        'enable_gradient_surgery': True,
+        'use_low_rank_adjacency': True,  # Enable parameter efficiency
+        'adjacency_rank': 2  # Rank for low-rank factorization
     }
     
     # Run comprehensive evaluation

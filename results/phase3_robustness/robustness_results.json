@@ -3,150 +3,150 @@
     "seed": 0,
     "noise_level": 0.1,
     "final_metrics": {
-      "train_loss": 0.0472737128729932,
-      "test_loss": 0.01937930259737186,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.21718963724561036
+      "train_loss": 0.12074572802521288,
+      "test_loss": 0.06767892756033689,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_0_noise_0.3": {
     "seed": 0,
     "noise_level": 0.3,
     "final_metrics": {
-      "train_loss": 0.14953842479735613,
-      "test_loss": 0.1149853146634996,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2003011384513229
+      "train_loss": 0.1827065465040505,
+      "test_loss": 0.13949932251125574,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.09390791953774169
     }
   },
   "seed_0_noise_0.5": {
     "seed": 0,
     "noise_level": 0.5,
     "final_metrics": {
-      "train_loss": 0.35013659857213497,
-      "test_loss": 0.2948770923539996,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.21032369846943766
+      "train_loss": 0.4621807895600796,
+      "test_loss": 0.39673035917803645,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_0_noise_0.7": {
     "seed": 0,
     "noise_level": 0.7,
     "final_metrics": {
-      "train_loss": 0.6389078889042139,
-      "test_loss": 0.5590386940166354,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2231810218654573
+      "train_loss": 0.7106462856754661,
+      "test_loss": 0.6454052729532123,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.16763856512261555
     }
   },
   "seed_0_noise_1.0": {
     "seed": 0,
     "noise_level": 1.0,
     "final_metrics": {
-      "train_loss": 1.2392842769622803,
-      "test_loss": 1.1161193363368511,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2476004776544869
+      "train_loss": 1.5229826737195253,
+      "test_loss": 1.4333967044949532,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_1_noise_0.1": {
     "seed": 1,
     "noise_level": 0.1,
     "final_metrics": {
-      "train_loss": 0.04774116910994053,
-      "test_loss": 0.01843314545112662,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.178669553832151
+      "train_loss": 0.1215738836908713,
+      "test_loss": 0.06767892756033689,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_1_noise_0.3": {
     "seed": 1,
     "noise_level": 0.3,
     "final_metrics": {
-      "train_loss": 0.14927985682152212,
-      "test_loss": 0.11487076804041862,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.19952978496439755
+      "train_loss": 0.1827065465040505,
+      "test_loss": 0.13949932251125574,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.09390791953774169
     }
   },
   "seed_1_noise_0.5": {
     "seed": 1,
     "noise_level": 0.5,
     "final_metrics": {
-      "train_loss": 0.35013659857213497,
-      "test_loss": 0.2948770923539996,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.21032369846943766
+      "train_loss": 0.4621807895600796,
+      "test_loss": 0.39673035917803645,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_1_noise_0.7": {
     "seed": 1,
     "noise_level": 0.7,
     "final_metrics": {
-      "train_loss": 0.6389078889042139,
-      "test_loss": 0.5590386940166354,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2231810218654573
+      "train_loss": 0.7106462856754661,
+      "test_loss": 0.6454052729532123,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.16763856512261555
     }
   },
   "seed_1_noise_1.0": {
     "seed": 1,
     "noise_level": 1.0,
     "final_metrics": {
-      "train_loss": 1.2392842769622803,
-      "test_loss": 1.1161193363368511,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2476004776544869
+      "train_loss": 1.5229826737195253,
+      "test_loss": 1.4333967044949532,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_2_noise_0.1": {
     "seed": 2,
     "noise_level": 0.1,
     "final_metrics": {
-      "train_loss": 0.04703243094263598,
-      "test_loss": 0.01938125326705631,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.21647375193424523
+      "train_loss": 0.12019965052604675,
+      "test_loss": 0.06767892756033689,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_2_noise_0.3": {
     "seed": 2,
     "noise_level": 0.3,
     "final_metrics": {
-      "train_loss": 0.14953842479735613,
-      "test_loss": 0.1149853146634996,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2003011384513229
+      "train_loss": 0.1827065465040505,
+      "test_loss": 0.13949932251125574,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.09390791953774169
     }
   },
   "seed_2_noise_0.5": {
     "seed": 2,
     "noise_level": 0.5,
     "final_metrics": {
-      "train_loss": 0.35013659857213497,
-      "test_loss": 0.2948770923539996,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.21032369846943766
+      "train_loss": 0.4621807895600796,
+      "test_loss": 0.39673035917803645,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   },
   "seed_2_noise_0.7": {
     "seed": 2,
     "noise_level": 0.7,
     "final_metrics": {
-      "train_loss": 0.6389078889042139,
-      "test_loss": 0.5590386940166354,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2231810218654573
+      "train_loss": 0.7106462856754661,
+      "test_loss": 0.6454052729532123,
+      "structure_accuracy": 0.6666666666666667,
+      "counterfactual_accuracy": 0.16763856512261555
     }
   },
   "seed_2_noise_1.0": {
     "seed": 2,
     "noise_level": 1.0,
     "final_metrics": {
-      "train_loss": 1.2392842769622803,
-      "test_loss": 1.1161193363368511,
-      "structure_accuracy": 0.0,
-      "counterfactual_accuracy": 0.2476004776544869
+      "train_loss": 1.5229826737195253,
+      "test_loss": 1.4333967044949532,
+      "structure_accuracy": 1.0,
+      "counterfactual_accuracy": 0.0
     }
   }
 }

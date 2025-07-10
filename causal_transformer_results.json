@@ -1,0 +1,98 @@
+{
+  "timestamp": "2025-07-09T17:35:56.871676",
+  "dataset_size": 52,
+  "data_fractions_tested": [
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "results": {
+    "0.1": {
+      "standard": {
+        "model_name": "standard",
+        "train_loss": 0.6623783508936564,
+        "test_accuracy": 0.5,
+        "n_train_samples": 4,
+        "n_test_samples": 10
+      },
+      "causal": {
+        "model_name": "causal",
+        "train_loss": 0.685792883237203,
+        "test_accuracy": 0.5,
+        "n_train_samples": 4,
+        "n_test_samples": 10
+      },
+      "causal_improvement": 0.0
+    },
+    "0.25": {
+      "standard": {
+        "model_name": "standard",
+        "train_loss": 0.7148316005865732,
+        "test_accuracy": 0.5,
+        "n_train_samples": 10,
+        "n_test_samples": 10
+      },
+      "causal": {
+        "model_name": "causal",
+        "train_loss": 0.6606735984484354,
+        "test_accuracy": 0.5,
+        "n_train_samples": 10,
+        "n_test_samples": 10
+      },
+      "causal_improvement": 0.0
+    },
+    "0.5": {
+      "standard": {
+        "model_name": "standard",
+        "train_loss": 0.6911727587381998,
+        "test_accuracy": 0.5,
+        "n_train_samples": 20,
+        "n_test_samples": 10
+      },
+      "causal": {
+        "model_name": "causal",
+        "train_loss": 0.6817480325698853,
+        "test_accuracy": 0.5,
+        "n_train_samples": 20,
+        "n_test_samples": 10
+      },
+      "causal_improvement": 0.0
+    },
+    "0.75": {
+      "standard": {
+        "model_name": "standard",
+        "train_loss": 0.6966041872898737,
+        "test_accuracy": 0.5,
+        "n_train_samples": 30,
+        "n_test_samples": 10
+      },
+      "causal": {
+        "model_name": "causal",
+        "train_loss": 0.6935315082470576,
+        "test_accuracy": 0.7,
+        "n_train_samples": 30,
+        "n_test_samples": 10
+      },
+      "causal_improvement": 0.19999999999999996
+    },
+    "1.0": {
+      "standard": {
+        "model_name": "standard",
+        "train_loss": 0.6983954588572184,
+        "test_accuracy": 0.5,
+        "n_train_samples": 40,
+        "n_test_samples": 10
+      },
+      "causal": {
+        "model_name": "causal",
+        "train_loss": 0.6988593657811483,
+        "test_accuracy": 0.5,
+        "n_train_samples": 40,
+        "n_test_samples": 10
+      },
+      "causal_improvement": 0.0
+    }
+  }
+}

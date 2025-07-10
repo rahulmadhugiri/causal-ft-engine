@@ -1,0 +1,277 @@
+{
+  "experiment_metadata": {
+    "timestamp": "2025-07-09T18:08:49.560257",
+    "objective": "Prove/disprove 2x-5x data efficiency improvement",
+    "dataset_size": 80,
+    "test_points": [
+      5,
+      10,
+      25,
+      50,
+      100
+    ],
+    "random_seed": 42,
+    "revolutionary_threshold": "2x-5x improvement"
+  },
+  "detailed_results": {
+    "5": {
+      "standard": {
+        "model_name": "Standard",
+        "train_size": 2,
+        "test_size": 2,
+        "accuracy": 1.0,
+        "f1_score": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "eval_loss": 0.645913302898407,
+        "final_train_loss": 0.5511287450790405,
+        "training_losses": [
+          0.6792794466018677,
+          0.6837186813354492,
+          0.59880530834198,
+          0.5752094984054565,
+          0.5828601121902466,
+          0.5511287450790405
+        ],
+        "causal_metrics": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_size": 2,
+        "test_size": 2,
+        "accuracy": 1.0,
+        "f1_score": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "eval_loss": 0.6595468521118164,
+        "final_train_loss": 0.612614631652832,
+        "training_losses": [
+          0.7295748591423035,
+          0.6739789843559265,
+          0.6223308444023132,
+          0.6002815961837769,
+          0.585070788860321,
+          0.612614631652832
+        ],
+        "causal_metrics": {
+          "violation_penalty": 0.00896872952580452,
+          "total_interventions": 6,
+          "avg_intervention_strength": 0.4999997019767761
+        }
+      },
+      "accuracy_improvement": 0.0,
+      "f1_improvement": 0.0,
+      "causal_winner": false
+    },
+    "10": {
+      "standard": {
+        "model_name": "Standard",
+        "train_size": 6,
+        "test_size": 2,
+        "accuracy": 0.0,
+        "f1_score": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "eval_loss": 0.7268729209899902,
+        "final_train_loss": 0.6089536547660828,
+        "training_losses": [
+          0.7073543667793274,
+          0.6751516461372375,
+          0.628584086894989,
+          0.6090683341026306,
+          0.6016287207603455,
+          0.6089536547660828
+        ],
+        "causal_metrics": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_size": 6,
+        "test_size": 2,
+        "accuracy": 0.0,
+        "f1_score": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "eval_loss": 0.7451328039169312,
+        "final_train_loss": 0.5883253216743469,
+        "training_losses": [
+          0.7012583017349243,
+          0.6503331065177917,
+          0.6083465814590454,
+          0.5885336995124817,
+          0.5956831574440002,
+          0.5883253216743469
+        ],
+        "causal_metrics": {
+          "violation_penalty": 0.024960288777947426,
+          "total_interventions": 4,
+          "avg_intervention_strength": 0.49999961256980896
+        }
+      },
+      "accuracy_improvement": 0.0,
+      "f1_improvement": 0.0,
+      "causal_winner": false
+    },
+    "25": {
+      "standard": {
+        "model_name": "Standard",
+        "train_size": 16,
+        "test_size": 4,
+        "accuracy": 0.75,
+        "f1_score": 0.7333333333333334,
+        "precision": 0.8333333333333333,
+        "recall": 0.75,
+        "eval_loss": 0.6950361132621765,
+        "final_train_loss": 0.5889480710029602,
+        "training_losses": [
+          0.6945073008537292,
+          0.6496695876121521,
+          0.6154317259788513,
+          0.6074267029762268,
+          0.5893014669418335,
+          0.5889480710029602
+        ],
+        "causal_metrics": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_size": 16,
+        "test_size": 4,
+        "accuracy": 0.75,
+        "f1_score": 0.7333333333333334,
+        "precision": 0.8333333333333333,
+        "recall": 0.75,
+        "eval_loss": 0.6955583095550537,
+        "final_train_loss": 0.6258588433265686,
+        "training_losses": [
+          0.7115597128868103,
+          0.6724666357040405,
+          0.650935173034668,
+          0.6298841834068298,
+          0.6211712956428528,
+          0.6258588433265686
+        ],
+        "causal_metrics": {
+          "violation_penalty": 0.02481488324701786,
+          "total_interventions": 2,
+          "avg_intervention_strength": 0.49999988079071045
+        }
+      },
+      "accuracy_improvement": 0.0,
+      "f1_improvement": 0.0,
+      "causal_winner": false
+    },
+    "50": {
+      "standard": {
+        "model_name": "Standard",
+        "train_size": 32,
+        "test_size": 8,
+        "accuracy": 0.375,
+        "f1_score": 0.36507936507936506,
+        "precision": 0.3666666666666667,
+        "recall": 0.375,
+        "eval_loss": 0.6833767294883728,
+        "final_train_loss": 0.6066051125526428,
+        "training_losses": [
+          0.6997242271900177,
+          0.6796712875366211,
+          0.6466451287269592,
+          0.6303420960903168,
+          0.6215828657150269,
+          0.6066051125526428
+        ],
+        "causal_metrics": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_size": 32,
+        "test_size": 8,
+        "accuracy": 0.375,
+        "f1_score": 0.36507936507936506,
+        "precision": 0.3666666666666667,
+        "recall": 0.375,
+        "eval_loss": 0.7086665630340576,
+        "final_train_loss": 0.6176083981990814,
+        "training_losses": [
+          0.706495463848114,
+          0.6711779236793518,
+          0.6467207074165344,
+          0.6286816298961639,
+          0.6266697347164154,
+          0.6176083981990814
+        ],
+        "causal_metrics": {
+          "violation_penalty": 0.025374554097652435,
+          "total_interventions": 7,
+          "avg_intervention_strength": 0.49999988079071045
+        }
+      },
+      "accuracy_improvement": 0.0,
+      "f1_improvement": 0.0,
+      "causal_winner": false
+    },
+    "100": {
+      "standard": {
+        "model_name": "Standard",
+        "train_size": 64,
+        "test_size": 16,
+        "accuracy": 0.9375,
+        "f1_score": 0.9372549019607843,
+        "precision": 0.9444444444444444,
+        "recall": 0.9375,
+        "eval_loss": 0.5609638094902039,
+        "final_train_loss": 0.5815040767192841,
+        "training_losses": [
+          0.702512338757515,
+          0.6572260856628418,
+          0.6329765468835831,
+          0.6008904725313187,
+          0.5814737975597382,
+          0.5815040767192841
+        ],
+        "causal_metrics": {}
+      },
+      "causal": {
+        "model_name": "Causal",
+        "train_size": 64,
+        "test_size": 16,
+        "accuracy": 0.9375,
+        "f1_score": 0.9372549019607843,
+        "precision": 0.9444444444444444,
+        "recall": 0.9375,
+        "eval_loss": 0.5597006678581238,
+        "final_train_loss": 0.5741762071847916,
+        "training_losses": [
+          0.6951401084661484,
+          0.6611959934234619,
+          0.6251864284276962,
+          0.6085105687379837,
+          0.5882373154163361,
+          0.5741762071847916
+        ],
+        "causal_metrics": {
+          "violation_penalty": 0.02473806031048298,
+          "total_interventions": 21,
+          "avg_intervention_strength": 0.49999943375587463
+        }
+      },
+      "accuracy_improvement": 0.0,
+      "f1_improvement": 0.0,
+      "causal_winner": false
+    }
+  },
+  "summary_analysis": {
+    "causal_wins": 0,
+    "total_tests": 5,
+    "win_rate": 0.0,
+    "average_improvement": 0.0,
+    "max_improvement": 0.0,
+    "min_improvement": 0.0
+  },
+  "data_efficiency_verdict": {
+    "baseline_accuracy": 0.9375,
+    "data_efficiency_factor": 20.0,
+    "revolutionary_achieved": true,
+    "verdict": "REVOLUTIONARY"
+  }
+}

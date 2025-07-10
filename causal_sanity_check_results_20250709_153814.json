@@ -1,0 +1,267 @@
+{
+  "test_1": {
+    "adjacency_before": null,
+    "intervention_node": 1,
+    "intervention_value": 0.5,
+    "output_shape": [
+      5,
+      1
+    ],
+    "input_actually_modified": false,
+    "dynamic_adjacency_error": "CausalUnitNetwork.compute_dynamic_adjacency() missing 1 required positional argument: 'x'"
+  },
+  "test_2": {
+    "no_intervention": {
+      "loss": 0.07889053970575333,
+      "violation_penalty": 0.0,
+      "output_mean": -0.023134145885705948,
+      "output_std": 0.05143624544143677
+    },
+    "with_intervention": {
+      "loss": 0.06942659616470337,
+      "violation_penalty": 0.0,
+      "output_mean": -0.03546850010752678,
+      "output_std": 0.02058510109782219
+    },
+    "penalty_increases_with_intervention": false
+  },
+  "test_3": {
+    "alpha_parameters_found": true,
+    "alpha_values": {
+      "units.0.alpha": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0
+      },
+      "units.1.alpha": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0
+      }
+    },
+    "alpha_gradients": {},
+    "alpha_ranges": {
+      "units.0.alpha": {
+        "changed": false,
+        "max_change": 0.0
+      },
+      "units.1.alpha": {
+        "changed": false,
+        "max_change": 0.0
+      }
+    }
+  },
+  "test_4": {
+    "baseline_mean": -0.058224666863679886,
+    "baseline_std": 0.03911477327346802,
+    "interventions": {
+      "x0=0.0": {
+        "output_mean": -0.048302989453077316,
+        "output_std": 0.058630477637052536,
+        "mean_diff": 0.009921685792505741,
+        "std_diff": 0.08073963224887848,
+        "max_abs_diff": 0.2308717519044876,
+        "significant_change": true
+      },
+      "x0=1.0": {
+        "output_mean": 0.03982457146048546,
+        "output_std": 0.05863047391176224,
+        "mean_diff": 0.09804923832416534,
+        "std_diff": 0.08073963224887848,
+        "max_abs_diff": 0.318999320268631,
+        "significant_change": true
+      },
+      "x1=-1.0": {
+        "output_mean": 0.024269413203001022,
+        "output_std": 0.08362666517496109,
+        "mean_diff": 0.0824940875172615,
+        "std_diff": 0.0776805505156517,
+        "max_abs_diff": 0.2893921434879303,
+        "significant_change": true
+      },
+      "x1=1.0": {
+        "output_mean": -0.15092752873897552,
+        "output_std": 0.08362666517496109,
+        "mean_diff": -0.09270286560058594,
+        "std_diff": 0.0776805505156517,
+        "max_abs_diff": 0.346953809261322,
+        "significant_change": true
+      },
+      "x2=0.5": {
+        "output_mean": -0.05276816338300705,
+        "output_std": 0.020036444067955017,
+        "mean_diff": 0.005456504877656698,
+        "std_diff": 0.034649237990379333,
+        "max_abs_diff": 0.12535357475280762,
+        "significant_change": true
+      }
+    },
+    "total_significant_changes": 5,
+    "fraction_significant": 1.0
+  },
+  "test_5": {
+    "true_edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "causal_effect_tests": {
+      "x0 -> x1": {
+        "parent": 0,
+        "child": 1,
+        "effect_magnitude": 0.0850253701210022,
+        "effect_direction": "positive",
+        "significant": true
+      },
+      "x1 -> x2": {
+        "parent": 1,
+        "child": 2,
+        "effect_magnitude": 0.08355114609003067,
+        "effect_direction": "negative",
+        "significant": true
+      },
+      "x2 -> x0 (reverse)": {
+        "parent": 2,
+        "child": 0,
+        "effect_magnitude": 0.010603215545415878,
+        "effect_direction": "positive",
+        "significant": true,
+        "should_be_minimal": true
+      },
+      "x2 -> x1 (reverse)": {
+        "parent": 2,
+        "child": 1,
+        "effect_magnitude": 0.009837555699050426,
+        "effect_direction": "positive",
+        "significant": false,
+        "should_be_minimal": true
+      }
+    },
+    "summary": {
+      "causal_effects_detected": 2,
+      "non_causal_effects_detected": 1,
+      "causal_precision": 1.0,
+      "non_causal_suppression": 0.5
+    }
+  },
+  "test_6": {
+    "vanilla": {
+      "final_loss": 0.020627498626708984,
+      "loss_curve": [
+        0.04371343553066254,
+        0.023117253556847572,
+        0.03046131692826748,
+        0.030299901962280273,
+        0.023346876725554466,
+        0.018603088334202766,
+        0.023040609434247017,
+        0.02181151881814003,
+        0.022074975073337555,
+        0.02287456765770912,
+        0.019188273698091507,
+        0.01834016852080822,
+        0.022426459938287735,
+        0.015598606318235397,
+        0.028151538223028183,
+        0.02435685694217682,
+        0.022492535412311554,
+        0.019103121012449265,
+        0.023020727559924126,
+        0.020627498626708984
+      ],
+      "loss_improvement": 0.023085936903953552,
+      "converged": true
+    },
+    "violation_penalty": {
+      "final_loss": 0.022586509585380554,
+      "loss_curve": [
+        0.03949059173464775,
+        0.02300465665757656,
+        0.035023242235183716,
+        0.022636156529188156,
+        0.017489014193415642,
+        0.024354705587029457,
+        0.01748010329902172,
+        0.020357627421617508,
+        0.020109005272388458,
+        0.027201294898986816,
+        0.0215971227735281,
+        0.015828726813197136,
+        0.02477547712624073,
+        0.01862921752035618,
+        0.021408062428236008,
+        0.018206777051091194,
+        0.020829012617468834,
+        0.018460188060998917,
+        0.017315540462732315,
+        0.022586509585380554
+      ],
+      "loss_improvement": 0.016904082149267197,
+      "converged": true
+    },
+    "full_causal": {
+      "final_loss": 0.018330691382288933,
+      "loss_curve": [
+        0.056701671332120895,
+        0.01911134086549282,
+        0.021440358832478523,
+        0.03061375394463539,
+        0.016909707337617874,
+        0.02370903082191944,
+        0.014545922167599201,
+        0.014551005326211452,
+        0.015051817521452904,
+        0.019363753497600555,
+        0.01653292030096054,
+        0.018374111503362656,
+        0.02099500223994255,
+        0.012156468816101551,
+        0.01211605779826641,
+        0.023531680926680565,
+        0.024371348321437836,
+        0.019358301535248756,
+        0.018735989928245544,
+        0.018330691382288933
+      ],
+      "loss_improvement": 0.03837097994983196,
+      "converged": true
+    },
+    "comparison": {
+      "best_model": "full_causal",
+      "final_losses": {
+        "vanilla": 0.020627498626708984,
+        "violation_penalty": 0.022586509585380554,
+        "full_causal": 0.018330691382288933
+      },
+      "loss_differences": {
+        "vanilla": 0.0,
+        "violation_penalty": 0.00195901095867157,
+        "full_causal": -0.0022968072444200516
+      }
+    }
+  },
+  "test_7": {
+    "causal_model": {
+      "final_loss": 0.010471198707818985,
+      "spurious_effect": 35.91751480102539,
+      "spurious_resistance": false
+    },
+    "vanilla_model": {
+      "final_loss": 0.0047768885269761086,
+      "spurious_effect": 408.22149658203125,
+      "spurious_resistance": false
+    },
+    "comparison": {
+      "causal_more_resistant": false,
+      "both_resistant": false,
+      "neither_resistant": true
+    }
+  }
+}

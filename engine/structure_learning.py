@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, List
 import warnings
 
 
@@ -15,18 +15,20 @@ class DifferentiableDAG(nn.Module):
     Smooth Acyclicity Constraint) for learning causal graph structure.
     """
     
-    def __init__(self, num_variables: int, hidden_dim: int = 16):
+    def __init__(self, num_variables: int, hidden_dim: int = 16, enable_structure_transfer: bool = True):
         """
         Initialize differentiable DAG learner.
         
         Args:
             num_variables: Number of variables in the causal graph
             hidden_dim: Hidden dimension for the neural network
+            enable_structure_transfer: Whether to enable structure transfer mechanisms
         """
         super(DifferentiableDAG, self).__init__()
         
         self.num_variables = num_variables
         self.hidden_dim = hidden_dim
+        self.enable_structure_transfer = enable_structure_transfer
         
         # Learnable adjacency matrix (logits)
         self.adjacency_logits = nn.Parameter(
@@ -45,6 +47,145 @@ class DifferentiableDAG(nn.Module):
         # Temperature for Gumbel-Softmax (learnable)
         self.temperature = nn.Parameter(torch.tensor(1.0))
         
+        # Structure transfer components
+        if enable_structure_transfer:
+            # Memory bank for storing previous successful structures
+            self.structure_memory = []
+            self.structure_scores = []
+            self.max_memory_size = 10
+            
+            # Transfer learning weights
+            self.transfer_weight = nn.Parameter(torch.tensor(0.1))  # How much to rely on previous structures
+            self.similarity_threshold = 0.7  # Threshold for structure similarity
+            
+            # Meta-learning component for structure adaptation
+            self.meta_learner = nn.Sequential(
+                nn.Linear(num_variables * num_variables, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, num_variables * num_variables),
+                nn.Tanh()  # Output adjustment factors
+            )
+        
+        print(f"DifferentiableDAG initialized with structure transfer: {enable_structure_transfer}")
+    
+    def add_structure_to_memory(self, adjacency: torch.Tensor, performance_score: float):
+        """
+        Add a successful structure to memory for future transfer.
+        
+        Args:
+            adjacency: Adjacency matrix of successful structure
+            performance_score: Performance score of this structure (higher is better)
+        """
+        if not self.enable_structure_transfer:
+            return
+        
+        # Store structure and score
+        self.structure_memory.append(adjacency.detach().clone())
+        self.structure_scores.append(performance_score)
+        
+        # Keep only the best structures (up to max_memory_size)
+        if len(self.structure_memory) > self.max_memory_size:
+            # Sort by performance score and keep the best
+            sorted_indices = sorted(range(len(self.structure_scores)), 
+                                  key=lambda i: self.structure_scores[i], reverse=True)
+            
+            self.structure_memory = [self.structure_memory[i] for i in sorted_indices[:self.max_memory_size]]
+            self.structure_scores = [self.structure_scores[i] for i in sorted_indices[:self.max_memory_size]]
+        
+        print(f"Added structure to memory. Memory size: {len(self.structure_memory)}")
+    
+    def find_similar_structures(self, current_adjacency: torch.Tensor) -> List[Tuple[torch.Tensor, float]]:
+        """
+        Find similar structures in memory based on structural similarity.
+        
+        Args:
+            current_adjacency: Current adjacency matrix
+            
+        Returns:
+            List of (similar_structure, similarity_score) tuples
+        """
+        if not self.enable_structure_transfer or not self.structure_memory:
+            return []
+        
+        similar_structures = []
+        
+        for stored_structure in self.structure_memory:
+            # Calculate structural similarity (normalized dot product)
+            similarity = torch.sum(current_adjacency * stored_structure) / (
+                torch.norm(current_adjacency) * torch.norm(stored_structure) + 1e-8
+            )
+            
+            if similarity > self.similarity_threshold:
+                similar_structures.append((stored_structure, similarity.item()))
+        
+        # Sort by similarity score
+        similar_structures.sort(key=lambda x: x[1], reverse=True)
+        
+        return similar_structures
+    
+    def warm_start_from_previous(self, target_structure: torch.Tensor, adaptation_strength: float = 0.5):
+        """
+        Warm-start the adjacency matrix from a previous successful structure.
+        
+        Args:
+            target_structure: Target structure to initialize from
+            adaptation_strength: How much to adapt towards the target (0=no adaptation, 1=full copy)
+        """
+        if not self.enable_structure_transfer:
+            return
+        
+        with torch.no_grad():
+            # Get current adjacency logits
+            current_logits = self.adjacency_logits.data
+            
+            # Convert target structure to logits (inverse sigmoid)
+            target_logits = torch.log(target_structure + 1e-8) - torch.log(1 - target_structure + 1e-8)
+            
+            # Apply meta-learning adaptation
+            target_flat = target_structure.flatten()
+            adaptation_factors = self.meta_learner(target_flat)
+            adapted_target_logits = target_logits * adaptation_factors.view_as(target_logits)
+            
+            # Blend current and target logits
+            self.adjacency_logits.data = (
+                (1 - adaptation_strength) * current_logits + 
+                adaptation_strength * adapted_target_logits
+            )
+        
+        print(f"Warm-started adjacency matrix with adaptation strength: {adaptation_strength}")
+    
+    def transfer_learning_step(self, X: torch.Tensor) -> torch.Tensor:
+        """
+        Perform a structure transfer learning step.
+        
+        Args:
+            X: Input data
+            
+        Returns:
+            Transfer loss to add to the main loss
+        """
+        if not self.enable_structure_transfer or not self.structure_memory:
+            return torch.tensor(0.0)
+        
+        current_adjacency = self.get_adjacency_matrix(hard=False)
+        
+        # Find similar structures
+        similar_structures = self.find_similar_structures(current_adjacency)
+        
+        if not similar_structures:
+            return torch.tensor(0.0)
+        
+        # Compute transfer loss: encourage similarity to successful structures
+        transfer_loss = torch.tensor(0.0)
+        
+        for similar_structure, similarity_score in similar_structures[:3]:  # Top 3 similar structures
+            # Distance loss weighted by similarity
+            distance = torch.norm(current_adjacency - similar_structure, p='fro')
+            weight = similarity_score * self.transfer_weight
+            transfer_loss += weight * distance
+        
+        return transfer_loss
+    
     def get_adjacency_matrix(self, hard: bool = False):
         """
         Get the current adjacency matrix using Gumbel-Softmax.
@@ -155,14 +296,15 @@ class DifferentiableDAG(nn.Module):
         return torch.sum(torch.abs(adjacency))
     
     def get_structure_loss(self, X: torch.Tensor, lambda_acyclic: float = 1.0, 
-                          lambda_sparse: float = 0.01):
+                          lambda_sparse: float = 0.01, lambda_transfer: float = 0.1):
         """
-        Compute total structure learning loss combining reconstruction, acyclicity, and sparsity.
+        Compute total structure learning loss including transfer learning.
         
         Args:
             X: Input data
             lambda_acyclic: Weight for acyclicity constraint
             lambda_sparse: Weight for sparsity constraint
+            lambda_transfer: Weight for transfer learning loss
             
         Returns:
             Dictionary with individual loss components and total loss
@@ -174,16 +316,19 @@ class DifferentiableDAG(nn.Module):
         reconstruction_loss = F.mse_loss(X_reconstructed, X)
         acyclicity_loss = self.acyclicity_constraint(adjacency)
         sparsity_loss = self.sparsity_loss(adjacency)
+        transfer_loss = self.transfer_learning_step(X)
         
         # Total loss
         total_loss = (reconstruction_loss + 
                      lambda_acyclic * torch.abs(acyclicity_loss) +
-                     lambda_sparse * sparsity_loss)
+                     lambda_sparse * sparsity_loss +
+                     lambda_transfer * transfer_loss)
         
         return {
             'reconstruction_loss': reconstruction_loss,
             'acyclicity_loss': acyclicity_loss,
             'sparsity_loss': sparsity_loss,
+            'transfer_loss': transfer_loss,
             'total_loss': total_loss,
             'adjacency': adjacency
         }

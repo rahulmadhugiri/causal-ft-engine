@@ -1,0 +1,1141 @@
+{
+  "final_structure_f1": 0.800000011920929,
+  "total_interventions": 30,
+  "learning_efficiency": 0.026666667055142076,
+  "final_adjacency": [
+    [
+      0.4380021393299103,
+      1.0,
+      0.0
+    ],
+    [
+      0.4465866982936859,
+      0.0,
+      1.0
+    ],
+    [
+      1.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "true_adjacency": [
+    [
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "learning_history": [
+    {
+      "cycle": 1,
+      "interventions": [
+        {
+          "node": 0,
+          "value": 1.0,
+          "expected_gain": 0.58428955078125,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 2,
+          "value": -2.0,
+          "discrimination_score": 2.75,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.0108933812007308,
+          "total_effect": 6.536028861999512,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.016249680891633034,
+            "1": 0.0,
+            "2": 0.016430463641881943
+          }
+        },
+        {
+          "effect_magnitude": 0.012186638079583645,
+          "total_effect": 7.31198263168335,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.01849718578159809,
+            "1": 0.0,
+            "2": 0.01806272752583027
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 1.0,
+        "intervention_effectiveness": 0.011540009640157223,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.11429828405380249,
+          1.0,
+          0.0
+        ],
+        [
+          0.2341938614845276,
+          0.0,
+          1.0
+        ],
+        [
+          0.4848669767379761,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 2,
+      "interventions": [
+        {
+          "node": 1,
+          "value": -2.0,
+          "expected_gain": 0.6232096552848816,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 2,
+          "value": -2.0,
+          "discrimination_score": 2.697739972054421,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.019007515162229538,
+          "total_effect": 11.404508590698242,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.028593335300683975,
+            "1": 0.0,
+            "2": 0.02842920832335949
+          }
+        },
+        {
+          "effect_magnitude": 0.01707320287823677,
+          "total_effect": 10.243922233581543,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.024980559945106506,
+            "1": 0.0,
+            "2": 0.026239052414894104
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.018040359020233154,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.10656362771987915,
+          1.0,
+          0.0
+        ],
+        [
+          0.24403207004070282,
+          0.0,
+          1.0
+        ],
+        [
+          0.5347363948822021,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 3,
+      "interventions": [
+        {
+          "node": 0,
+          "value": 2.0,
+          "expected_gain": 0.5327085256576538,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 2,
+          "value": -2.0,
+          "discrimination_score": 1.7598350751175298,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.01075487770140171,
+          "total_effect": 6.4529266357421875,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.016542593017220497,
+            "1": 0.0,
+            "2": 0.015722040086984634
+          }
+        },
+        {
+          "effect_magnitude": 0.010693552903831005,
+          "total_effect": 6.416131973266602,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.016217095777392387,
+            "1": 0.0,
+            "2": 0.015863562002778053
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.010724215302616358,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.10902833938598633,
+          1.0,
+          0.0
+        ],
+        [
+          0.2517643868923187,
+          0.0,
+          1.0
+        ],
+        [
+          0.5845963358879089,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 4,
+      "interventions": [
+        {
+          "node": 0,
+          "value": 0.0,
+          "expected_gain": 0.5023211240768433,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 2,
+          "value": -2.0,
+          "discrimination_score": 1.308709957322622,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.014857050962746143,
+          "total_effect": 8.914230346679688,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.021889090538024902,
+            "1": 0.0,
+            "2": 0.022682059556245804
+          }
+        },
+        {
+          "effect_magnitude": 0.017807915806770325,
+          "total_effect": 10.684749603271484,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.026740662753582,
+            "1": 0.0,
+            "2": 0.026683086529374123
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.016332483384758234,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.11884805560112,
+          1.0,
+          0.0
+        ],
+        [
+          0.282509982585907,
+          0.0,
+          1.0
+        ],
+        [
+          0.6317153573036194,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 5,
+      "interventions": [
+        {
+          "node": 0,
+          "value": -1.0,
+          "expected_gain": 0.4909706115722656,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 2,
+          "value": -2.0,
+          "discrimination_score": 0.6299315876920384,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.012516692280769348,
+          "total_effect": 7.510015487670898,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.01746889390051365,
+            "1": 0.0,
+            "2": 0.020081181079149246
+          }
+        },
+        {
+          "effect_magnitude": 0.015327098779380322,
+          "total_effect": 9.196259498596191,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.02273578569293022,
+            "1": 0.0,
+            "2": 0.02324550598859787
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.013921895530074835,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.13656868040561676,
+          1.0,
+          0.0
+        ],
+        [
+          0.3001170754432678,
+          0.0,
+          1.0
+        ],
+        [
+          0.6793583631515503,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 6,
+      "interventions": [
+        {
+          "node": 2,
+          "value": 2.0,
+          "expected_gain": 0.38464224338531494,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.28073914360810087,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.013224070891737938,
+          "total_effect": 7.934442520141602,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.020222581923007965,
+            "1": 0.0,
+            "2": 0.019449632614850998
+          }
+        },
+        {
+          "effect_magnitude": 0.008883422240614891,
+          "total_effect": 5.330053329467773,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.013790152035653591,
+            "1": 0.0,
+            "2": 0.012860114686191082
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.011053746566176414,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.172882080078125,
+          1.0,
+          0.0
+        ],
+        [
+          0.3349493741989136,
+          0.0,
+          1.0
+        ],
+        [
+          0.7265852689743042,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 7,
+      "interventions": [
+        {
+          "node": 0,
+          "value": -1.0,
+          "expected_gain": 0.48084181547164917,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.3972113127841684,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.01362257357686758,
+          "total_effect": 8.173543930053711,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.01888943463563919,
+            "1": 0.0,
+            "2": 0.021978287026286125
+          }
+        },
+        {
+          "effect_magnitude": 0.012384775094687939,
+          "total_effect": 7.4308648109436035,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.0179307721555233,
+            "1": 0.0,
+            "2": 0.01922355219721794
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.01300367433577776,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.2139170914888382,
+          1.0,
+          0.0
+        ],
+        [
+          0.3681151866912842,
+          0.0,
+          1.0
+        ],
+        [
+          0.7767754793167114,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 8,
+      "interventions": [
+        {
+          "node": 2,
+          "value": 1.0,
+          "expected_gain": 0.38752734661102295,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.6659418113932202,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.011257567442953587,
+          "total_effect": 6.75454044342041,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.016415130347013474,
+            "1": 0.0,
+            "2": 0.01735757291316986
+          }
+        },
+        {
+          "effect_magnitude": 0.016159502789378166,
+          "total_effect": 9.695701599121094,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.02464117296040058,
+            "1": 0.0,
+            "2": 0.023837333545088768
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.013708535116165876,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.23273493349552155,
+          1.0,
+          0.0
+        ],
+        [
+          0.3806453049182892,
+          0.0,
+          1.0
+        ],
+        [
+          0.8250911831855774,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 9,
+      "interventions": [
+        {
+          "node": 2,
+          "value": -1.0,
+          "expected_gain": 0.3717561364173889,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.6745918805769874,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.00684267608448863,
+          "total_effect": 4.105605602264404,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.010400918312370777,
+            "1": 0.0,
+            "2": 0.010127109475433826
+          }
+        },
+        {
+          "effect_magnitude": 0.008197781629860401,
+          "total_effect": 4.9186692237854,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.012827405706048012,
+            "1": 0.0,
+            "2": 0.011765940114855766
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.007520228857174516,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.24282045662403107,
+          1.0,
+          0.0
+        ],
+        [
+          0.37585464119911194,
+          0.0,
+          1.0
+        ],
+        [
+          0.872520387172699,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 10,
+      "interventions": [
+        {
+          "node": 1,
+          "value": -1.0,
+          "expected_gain": 0.4962676167488098,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.9188407045437854,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.009781574830412865,
+          "total_effect": 5.868945121765137,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.015115979127585888,
+            "1": 0.0,
+            "2": 0.014228747226297855
+          }
+        },
+        {
+          "effect_magnitude": 0.015508352778851986,
+          "total_effect": 9.305011749267578,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.023441091179847717,
+            "1": 0.0,
+            "2": 0.023083969950675964
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.012644963804632425,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.28257080912590027,
+          1.0,
+          0.0
+        ],
+        [
+          0.3875587284564972,
+          0.0,
+          1.0
+        ],
+        [
+          0.919733464717865,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 11,
+      "interventions": [
+        {
+          "node": 1,
+          "value": -1.0,
+          "expected_gain": 0.4673021733760834,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.8437829045669283,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.013859659433364868,
+          "total_effect": 8.3157958984375,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.021262120455503464,
+            "1": 0.0,
+            "2": 0.02031685598194599
+          }
+        },
+        {
+          "effect_magnitude": 0.008391788229346275,
+          "total_effect": 5.0350728034973145,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.012891587801277637,
+            "1": 0.0,
+            "2": 0.012283775955438614
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.011125723831355572,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.30569154024124146,
+          1.0,
+          0.0
+        ],
+        [
+          0.3830706477165222,
+          0.0,
+          1.0
+        ],
+        [
+          0.964872419834137,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 12,
+      "interventions": [
+        {
+          "node": 2,
+          "value": 1.0,
+          "expected_gain": 0.4333333373069763,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.235884247360189,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.012853897176682949,
+          "total_effect": 7.712338447570801,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.0188906230032444,
+            "1": 0.0,
+            "2": 0.019671069458127022
+          }
+        },
+        {
+          "effect_magnitude": 0.007741360459476709,
+          "total_effect": 4.6448163986206055,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.011010739952325821,
+            "1": 0.0,
+            "2": 0.012213341891765594
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.01029762881807983,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.3365938067436218,
+          1.0,
+          0.0
+        ],
+        [
+          0.3872486650943756,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 13,
+      "interventions": [
+        {
+          "node": 2,
+          "value": 2.0,
+          "expected_gain": 0.4333333373069763,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.13429370344812314,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.010001000948250294,
+          "total_effect": 6.000600814819336,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.015055549331009388,
+            "1": 0.0,
+            "2": 0.014947452582418919
+          }
+        },
+        {
+          "effect_magnitude": 0.010499962605535984,
+          "total_effect": 6.299977779388428,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.014868026599287987,
+            "1": 0.0,
+            "2": 0.01663186401128769
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.010250481776893139,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.35555577278137207,
+          1.0,
+          0.0
+        ],
+        [
+          0.3978009521961212,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 14,
+      "interventions": [
+        {
+          "node": 2,
+          "value": 0.0,
+          "expected_gain": 0.4166666865348816,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.08972309330020647,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.009184394031763077,
+          "total_effect": 5.510636329650879,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.013240654021501541,
+            "1": 0.0,
+            "2": 0.01431252621114254
+          }
+        },
+        {
+          "effect_magnitude": 0.016872020438313484,
+          "total_effect": 10.123212814331055,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.024792365729808807,
+            "1": 0.0,
+            "2": 0.025823697447776794
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.01302820723503828,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.3581731617450714,
+          1.0,
+          0.0
+        ],
+        [
+          0.4057014584541321,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "cycle": 15,
+      "interventions": [
+        {
+          "node": 0,
+          "value": 0.0,
+          "expected_gain": 0.6180382370948792,
+          "uncertainty": 0.0,
+          "strategy": "active_sampling"
+        },
+        {
+          "node": 1,
+          "value": -2.0,
+          "discrimination_score": 0.08902405920470698,
+          "planning_method": "discriminative",
+          "strategy": "discriminative_planning"
+        }
+      ],
+      "outcomes": [
+        {
+          "effect_magnitude": 0.00890960544347763,
+          "total_effect": 5.345763206481934,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.013158686459064484,
+            "1": 0.0,
+            "2": 0.013570127077400684
+          }
+        },
+        {
+          "effect_magnitude": 0.011732778511941433,
+          "total_effect": 7.039667129516602,
+          "affected_nodes": [
+            0,
+            2
+          ],
+          "node_effects": {
+            "0": 0.017454348504543304,
+            "1": 0.0,
+            "2": 0.01774398796260357
+          }
+        }
+      ],
+      "metrics": {
+        "structure_f1": 0.800000011920929,
+        "intervention_effectiveness": 0.010321191977709532,
+        "learning_progress": 1.0,
+        "n_interventions": 2
+      },
+      "adjacency": [
+        [
+          0.393460750579834,
+          1.0,
+          0.0
+        ],
+        [
+          0.4226139187812805,
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ]
+    }
+  ],
+  "component_stats": {
+    "active_sampling": {
+      "total_interventions": 30,
+      "avg_information_gain": 0.0,
+      "uncertainty_reduction": 0.0,
+      "exploration_rate": 0.3,
+      "current_uncertainty": 0.0
+    },
+    "intervention_planning": {
+      "total_interventions": 0,
+      "belief_entropy": 0.05856724657173375,
+      "world_diversity": 1.4142135381698608,
+      "discrimination_power": 0.0,
+      "top_world_confidence": 0.9894382381533828
+    },
+    "contrastive_learning": {
+      "n_interventions": 30,
+      "n_contrastive_pairs": 0,
+      "avg_contrastive_loss": 0.09400956316626277,
+      "most_important_relationships": [
+        [
+          0,
+          1,
+          0.9528986811637878
+        ],
+        [
+          1,
+          0,
+          0.9389351606369019
+        ],
+        [
+          2,
+          2,
+          0.8497192859649658
+        ],
+        [
+          1,
+          2,
+          0.8285350799560547
+        ],
+        [
+          0,
+          2,
+          0.8225083351135254
+        ]
+      ],
+      "relationship_importance_entropy": 2.1890666484832764,
+      "learning_progress": 29
+    }
+  }
+}

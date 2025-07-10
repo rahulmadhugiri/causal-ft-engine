@@ -64,7 +64,11 @@ class CausalUnitTrainer:
             'epoch': [],
             'prediction_loss': [],
             'counterfactual_loss': [],
+            'traditional_cf_loss': [],
+            'cf_structure_loss': [],
+            'cf_consistency_loss': [],
             'structure_loss': [],
+            'causal_violation_penalty': [],
             'total_loss': [],
             'intervention_rate': [],
             'gradient_norms': [],
@@ -102,9 +106,9 @@ class CausalUnitTrainer:
     def compute_counterfactual_loss(self, 
                                    x: torch.Tensor, 
                                    y: torch.Tensor,
-                                   true_adjacency: Optional[torch.Tensor] = None) -> torch.Tensor:
+                                   true_adjacency: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, Dict]:
         """
-        Compute counterfactual loss for causal learning.
+        Compute counterfactual loss with structure backpropagation for causal learning.
         
         Args:
             x: Input data (batch_size, input_dim)
@@ -112,48 +116,96 @@ class CausalUnitTrainer:
             true_adjacency: Optional true causal structure
             
         Returns:
-            Counterfactual loss tensor
+            Tuple of (counterfactual_loss, counterfactual_info)
         """
         if not self.ablation_config['enable_interventions']:
-            return torch.tensor(0.0, device=self.device)
+            return torch.tensor(0.0, device=self.device), {}
         
         batch_size = x.shape[0]
-        counterfactual_losses = []
         
-        # Generate counterfactual samples
-        for _ in range(min(5, batch_size)):  # Limit for efficiency
+        # Get factual output (no intervention)
+        factual_output = self.network(x, interventions=None)
+        
+        # Collect counterfactual outputs and intervention info
+        counterfactual_outputs = []
+        intervention_masks = []
+        intervention_values = []
+        
+        # Generate multiple counterfactual samples for structure learning
+        num_counterfactuals = min(3, batch_size)
+        
+        for cf_idx in range(num_counterfactuals):
             # Random intervention
             intervention_node = np.random.randint(0, x.shape[1])
             intervention_value = torch.randn(1, device=self.device) * 2.0
             
             # Create intervention
-            intervention_mask = torch.zeros(x.shape[1], device=self.device)
-            intervention_values = torch.zeros(x.shape[1], device=self.device)
-            intervention_mask[intervention_node] = 1.0
-            intervention_values[intervention_node] = intervention_value
+            intervention_mask = torch.zeros(batch_size, x.shape[1], device=self.device)
+            intervention_vals = torch.zeros(batch_size, x.shape[1], device=self.device)
             
             # Apply intervention to a random subset of batch
             intervention_indices = np.random.choice(
                 batch_size, size=min(4, batch_size), replace=False
             )
             
+            for idx in intervention_indices:
+                intervention_mask[idx, intervention_node] = 1.0
+                intervention_vals[idx, intervention_node] = intervention_value
+            
+            # Create intervention format for network
             interventions = []
             for i in range(batch_size):
                 if i in intervention_indices:
-                    interventions.append({'counterfactual': (intervention_mask, intervention_values)})
+                    interventions.append({'counterfactual': (intervention_mask[i], intervention_vals[i])})
                 else:
                     interventions.append({})
             
             # Forward pass with intervention
-            y_counterfactual = self.network(x, interventions=interventions)
+            counterfactual_output = self.network(x, interventions=interventions)
             
-            # Compute counterfactual loss
-            cf_loss = self.causal_losses.counterfactual_loss(
-                y, y_counterfactual, y, y_counterfactual
-            )
-            counterfactual_losses.append(cf_loss)
+            # Store for structure loss computation
+            counterfactual_outputs.append(counterfactual_output)
+            intervention_masks.append(intervention_mask)
+            intervention_values.append(intervention_vals)
         
-        return torch.mean(torch.stack(counterfactual_losses)) if counterfactual_losses else torch.tensor(0.0, device=self.device)
+        # Compute traditional counterfactual loss
+        traditional_cf_loss = torch.tensor(0.0, device=self.device)
+        for cf_output in counterfactual_outputs:
+            traditional_cf_loss += self.causal_losses.counterfactual_loss(
+                y, cf_output, y, cf_output
+            )
+        traditional_cf_loss = traditional_cf_loss / len(counterfactual_outputs)
+        
+        # Compute NEW counterfactual structure loss
+        current_adjacency = self.network.get_adjacency_matrix(hard=False)
+        
+        structure_loss = torch.tensor(0.0, device=self.device)
+        for cf_output, cf_mask, cf_values in zip(counterfactual_outputs, intervention_masks, intervention_values):
+            structure_loss += self.causal_losses.counterfactual_structure_loss(
+                factual_output, cf_output, cf_mask, cf_values, current_adjacency
+            )
+        structure_loss = structure_loss / len(counterfactual_outputs)
+        
+        # Compute ENHANCED counterfactual consistency loss with adjacency matrix
+        consistency_loss = self.causal_losses.counterfactual_consistency_loss(
+            factual_output, counterfactual_outputs, intervention_masks, intervention_values,
+            adjacency_matrix=current_adjacency
+        )
+        
+        # Total counterfactual loss with structure feedback
+        total_cf_loss = (traditional_cf_loss + 
+                        self.causal_losses.counterfactual_structure_weight * structure_loss +
+                        0.1 * consistency_loss)
+        
+        # Return loss and diagnostic info
+        counterfactual_info = {
+            'traditional_cf_loss': traditional_cf_loss.item(),
+            'structure_loss': structure_loss.item(),
+            'consistency_loss': consistency_loss.item(),
+            'num_counterfactuals': len(counterfactual_outputs)
+        }
+        
+        return total_cf_loss, counterfactual_info
     
     def train_epoch(self, 
                     train_loader: torch.utils.data.DataLoader,
@@ -175,7 +227,11 @@ class CausalUnitTrainer:
         epoch_metrics = {
             'prediction_loss': 0.0,
             'counterfactual_loss': 0.0,
+            'traditional_cf_loss': 0.0,
+            'cf_structure_loss': 0.0,
+            'cf_consistency_loss': 0.0,
             'structure_loss': 0.0,
+            'causal_violation_penalty': 0.0,
             'total_loss': 0.0,
             'intervention_rate': 0.0,
             'gradient_norm': 0.0,
@@ -207,15 +263,19 @@ class CausalUnitTrainer:
             prediction_loss = self.prediction_loss_fn(output, y)
             
             # Counterfactual loss
-            counterfactual_loss = self.compute_counterfactual_loss(x, y, true_adjacency)
+            counterfactual_loss, cf_info = self.compute_counterfactual_loss(x, y, true_adjacency)
             
             # Structure learning loss
             structure_loss = self.network.get_structure_learning_loss(x)
             
+            # Causal violation penalty (soft regularization)
+            causal_violation_penalty = self.network.get_causal_violation_penalty()
+            
             # Total loss
             total_loss = (prediction_loss + 
                          self.counterfactual_weight * counterfactual_loss + 
-                         self.structure_weight * structure_loss)
+                         self.structure_weight * structure_loss +
+                         causal_violation_penalty)
             
             # Backward pass with gradient blocking
             total_loss.backward()
@@ -236,7 +296,11 @@ class CausalUnitTrainer:
             # Update metrics
             epoch_metrics['prediction_loss'] += prediction_loss.item()
             epoch_metrics['counterfactual_loss'] += counterfactual_loss.item()
+            epoch_metrics['traditional_cf_loss'] += cf_info.get('traditional_cf_loss', 0.0)
+            epoch_metrics['cf_structure_loss'] += cf_info.get('structure_loss', 0.0)
+            epoch_metrics['cf_consistency_loss'] += cf_info.get('consistency_loss', 0.0)
             epoch_metrics['structure_loss'] += structure_loss.item()
+            epoch_metrics['causal_violation_penalty'] += causal_violation_penalty.item()
             epoch_metrics['total_loss'] += total_loss.item()
             epoch_metrics['gradient_norm'] += grad_norm
             epoch_metrics['num_batches'] += 1
@@ -257,7 +321,10 @@ class CausalUnitTrainer:
                 print(f"Batch {batch_idx}: "
                       f"Pred Loss: {prediction_loss.item():.4f}, "
                       f"CF Loss: {counterfactual_loss.item():.4f}, "
+                      f"CF Struct Loss: {cf_info.get('structure_loss', 0.0):.4f}, "
+                      f"CF Consistency: {cf_info.get('consistency_loss', 0.0):.4f}, "
                       f"Struct Loss: {structure_loss.item():.4f}, "
+                      f"Violation Penalty: {causal_violation_penalty.item():.4f}, "
                       f"Intervention Rate: {intervention_rate:.2f}")
         
         # Average metrics
@@ -388,6 +455,7 @@ class CausalUnitTrainer:
             self.training_history['prediction_loss'].append(train_metrics['prediction_loss'])
             self.training_history['counterfactual_loss'].append(train_metrics['counterfactual_loss'])
             self.training_history['structure_loss'].append(train_metrics['structure_loss'])
+            self.training_history['causal_violation_penalty'].append(train_metrics['causal_violation_penalty'])
             self.training_history['total_loss'].append(train_metrics['total_loss'])
             self.training_history['intervention_rate'].append(train_metrics['intervention_rate'])
             self.training_history['gradient_norms'].append(train_metrics['gradient_norm'])
@@ -450,6 +518,7 @@ class CausalUnitTrainer:
         axes[0, 0].plot(self.training_history['epoch'], self.training_history['prediction_loss'], label='Prediction')
         axes[0, 0].plot(self.training_history['epoch'], self.training_history['counterfactual_loss'], label='Counterfactual')
         axes[0, 0].plot(self.training_history['epoch'], self.training_history['structure_loss'], label='Structure')
+        axes[0, 0].plot(self.training_history['epoch'], self.training_history['causal_violation_penalty'], label='Causal Violation')
         axes[0, 0].set_title('Loss Components')
         axes[0, 0].set_ylabel('Loss')
         axes[0, 0].legend()

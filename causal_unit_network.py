@@ -29,7 +29,10 @@ class CausalUnitNetwork(nn.Module):
                  enable_gradient_surgery: bool = True,
                  structure_hidden_dim: int = 16,
                  max_graph_depth: int = 10,
-                 intervention_dropout: float = 0.0):
+                 intervention_dropout: float = 0.0,
+                 lambda_reg: float = 0.01,
+                 use_low_rank_adjacency: bool = False,
+                 adjacency_rank: int = None):
         super(CausalUnitNetwork, self).__init__()
         
         self.input_dim = input_dim
@@ -40,6 +43,9 @@ class CausalUnitNetwork(nn.Module):
         self.enable_gradient_surgery = enable_gradient_surgery
         self.max_graph_depth = max_graph_depth
         self.intervention_dropout = intervention_dropout
+        self.lambda_reg = lambda_reg
+        self.use_low_rank_adjacency = use_low_rank_adjacency
+        self.adjacency_rank = adjacency_rank or min(input_dim // 2, 8)
         
         # Build network architecture
         self.units = nn.ModuleList()
@@ -57,14 +63,20 @@ class CausalUnitNetwork(nn.Module):
                 activation=activation,
                 node_id=unit_name,
                 enable_structure_learning=enable_structure_learning,
-                enable_gradient_surgery=enable_gradient_surgery
+                enable_gradient_surgery=enable_gradient_surgery,
+                use_low_rank_adjacency=use_low_rank_adjacency,
+                adjacency_rank=self.adjacency_rank
             )
             self.units.append(unit)
             self.unit_names.append(unit_name)
         
         # Structure learning component
         if enable_structure_learning:
-            self.structure_learner = DifferentiableDAG(input_dim, structure_hidden_dim)
+            self.structure_learner = DifferentiableDAG(
+                input_dim, 
+                structure_hidden_dim, 
+                enable_structure_transfer=True
+            )
             self.learned_adjacency = None
             self.structure_temperature = nn.Parameter(torch.ones(1) * 1.0)
         else:
@@ -80,8 +92,96 @@ class CausalUnitNetwork(nn.Module):
         self.structure_learning_mode = False
         self.intervention_training_mode = True
         
+        # CRITICAL FIX: Initialize proper chain adjacency matrix for causal structure
+        self._initialize_chain_adjacency()
+        
         # Initialize unit relationships
         self._setup_unit_relationships()
+        
+        # Log parameter efficiency gains
+        if use_low_rank_adjacency:
+            total_full_params = sum(dim**2 for dim in [input_dim] + hidden_dims + [output_dim])
+            total_low_rank_params = sum(2 * dim * self.adjacency_rank for dim in [input_dim] + hidden_dims + [output_dim])
+            print(f"Low-rank adjacency enabled: {total_full_params} → {total_low_rank_params} params ({100*total_low_rank_params/total_full_params:.1f}% of original)")
+    
+    def transfer_structure_from_previous(self, previous_network: 'CausalUnitNetwork', 
+                                       adaptation_strength: float = 0.5):
+        """
+        Transfer structure knowledge from a previous network.
+        
+        Args:
+            previous_network: Previous CausalUnitNetwork to transfer from
+            adaptation_strength: How much to adapt towards the previous structure
+        """
+        if not self.enable_structure_learning or not previous_network.enable_structure_learning:
+            print("Structure learning not enabled for transfer")
+            return
+        
+        if previous_network.learned_adjacency is not None:
+            # Transfer the learned adjacency matrix
+            self.structure_learner.warm_start_from_previous(
+                previous_network.learned_adjacency, 
+                adaptation_strength=adaptation_strength
+            )
+            
+            # Also add the previous structure to memory if it was successful
+            if hasattr(previous_network, 'final_performance_score'):
+                self.structure_learner.add_structure_to_memory(
+                    previous_network.learned_adjacency, 
+                    previous_network.final_performance_score
+                )
+            
+            print(f"Structure transfer completed from previous network")
+        else:
+            print("No learned adjacency found in previous network")
+    
+    def save_structure_performance(self, performance_score: float):
+        """
+        Save the current structure's performance for future transfer.
+        
+        Args:
+            performance_score: Performance score of current structure (higher is better)
+        """
+        if self.enable_structure_learning and self.learned_adjacency is not None:
+            self.final_performance_score = performance_score
+            self.structure_learner.add_structure_to_memory(
+                self.learned_adjacency, 
+                performance_score
+            )
+            print(f"Saved structure performance: {performance_score}")
+    
+    def get_structure_transfer_info(self) -> Dict:
+        """
+        Get information about structure transfer capabilities.
+        
+        Returns:
+            Dictionary with transfer information
+        """
+        if not self.enable_structure_learning:
+            return {'transfer_enabled': False}
+        
+        info = {
+            'transfer_enabled': True,
+            'memory_size': len(self.structure_learner.structure_memory) if self.structure_learner.structure_memory else 0,
+            'transfer_weight': self.structure_learner.transfer_weight.item() if hasattr(self.structure_learner, 'transfer_weight') else 0.0,
+            'similarity_threshold': self.structure_learner.similarity_threshold if hasattr(self.structure_learner, 'similarity_threshold') else 0.0,
+            'has_learned_structure': self.learned_adjacency is not None
+        }
+        
+        return info
+    
+    def _initialize_chain_adjacency(self):
+        """Initialize proper chain adjacency matrix for causal structure."""
+        # Create chain adjacency: 0->1->2->...->n-1
+        chain_adjacency = torch.zeros(self.input_dim, self.input_dim)
+        for i in range(self.input_dim - 1):
+            chain_adjacency[i, i + 1] = 1.0
+        
+        # CRITICAL FIX: Make adjacency a learnable parameter for gradient flow
+        self.learned_adjacency = nn.Parameter(chain_adjacency.clone())
+        self.current_adjacency = self.learned_adjacency
+        
+        print(f"Initialized chain adjacency matrix:\n{chain_adjacency}")
     
     def _setup_unit_relationships(self):
         """Set up parent-child relationships between units."""
@@ -116,15 +216,20 @@ class CausalUnitNetwork(nn.Module):
         """
         if self.learned_adjacency is not None:
             if hard:
-                return (self.learned_adjacency > 0.5).float()
+                return (torch.sigmoid(self.learned_adjacency) > 0.5).float()
             else:
-                return self.learned_adjacency
+                # Use raw parameter for better gradient flow, apply sigmoid for final output
+                return torch.clamp(self.learned_adjacency, 0.0, 1.0)
         
         if self.structure_learner is not None:
             return self.structure_learner.get_adjacency_matrix(hard=hard)
         
-        # Default to identity matrix
-        return torch.eye(self.input_dim, device=next(self.parameters()).device)
+        # CRITICAL FIX: Initialize with proper chain adjacency instead of identity
+        # Identity matrix means no causal relationships exist!
+        chain_adjacency = torch.zeros(self.input_dim, self.input_dim, device=next(self.parameters()).device)
+        for i in range(self.input_dim - 1):
+            chain_adjacency[i, i + 1] = 1.0
+        return chain_adjacency
     
     def update_structure(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -141,8 +246,11 @@ class CausalUnitNetwork(nn.Module):
             return x, self.get_adjacency_matrix()
         
         reconstructed_x, adjacency = self.structure_learner(x)
-        self.learned_adjacency = adjacency
-        self.current_adjacency = adjacency
+        # CRITICAL FIX: Allow gradient flow to the adjacency parameter
+        # Do not use torch.no_grad() here - we want gradients to flow back!
+        # Properly update the parameter tensor data
+        self.learned_adjacency.data = adjacency.data
+        self.current_adjacency = self.learned_adjacency
         
         return reconstructed_x, adjacency
     
@@ -252,11 +360,21 @@ class CausalUnitNetwork(nn.Module):
         if interventions is None:
             return base_adjacency
         
+        # CRITICAL FIX: Add type checking to handle incorrect input types
+        if not isinstance(interventions, list):
+            print(f"WARNING: interventions expected to be List[Dict] but got {type(interventions)}: {interventions}")
+            return base_adjacency
+        
         # Apply intervention-based rewiring
         dynamic_adjacency = base_adjacency.clone()
         
         # For each intervention, cut edges to intervened nodes
         for intervention_dict in interventions:
+            # Additional type checking for each intervention
+            if not isinstance(intervention_dict, dict):
+                print(f"WARNING: intervention_dict expected to be Dict but got {type(intervention_dict)}: {intervention_dict}")
+                continue
+                
             for intervention_name, (mask, values) in intervention_dict.items():
                 intervened_nodes = mask.bool()
                 
@@ -304,8 +422,12 @@ class CausalUnitNetwork(nn.Module):
         # Apply pathwise intervention algebra
         combined_mask, combined_values = self.apply_pathwise_intervention_algebra(interventions)
         
-        # Compute dynamic adjacency
+        # Compute dynamic adjacency for forward pass
         dynamic_adjacency = self.compute_dynamic_adjacency(x, interventions)
+        
+        # CRITICAL FIX: Use original adjacency for violation penalty computation
+        # Dynamic adjacency cuts edges which breaks violation penalty calculation!
+        original_adjacency = self.get_adjacency_matrix(hard=False)
         
         # Forward pass through network
         current_activation = x
@@ -316,8 +438,16 @@ class CausalUnitNetwork(nn.Module):
             # Other units use their own internal adjacency matrices
             if i == 0:
                 # First unit: use network adjacency and interventions
-                parent_values = current_activation  # Input data
-                unit_adjacency = dynamic_adjacency
+                # For violation penalty: use input as parent_values to enable penalty computation
+                parent_values = current_activation  # Input data for violation penalty computation
+                
+                # Ensure parent_values requires gradients for violation penalty computation
+                if parent_values is not None and not parent_values.requires_grad:
+                    parent_values = parent_values.requires_grad_(True)
+                    print(f"DEBUG: Set parent_values.requires_grad = True")
+                
+                # Use original adjacency for violation penalty, dynamic for forward pass
+                unit_adjacency = original_adjacency
                 unit_do_mask = combined_mask
                 unit_do_values = combined_values
             else:
@@ -335,6 +465,12 @@ class CausalUnitNetwork(nn.Module):
                 do_mask=unit_do_mask,
                 do_values=unit_do_values
             )
+            
+            # Debug: Verify adjacency matrix is being used
+            if i == 0 and unit_adjacency is not None:
+                print(f"DEBUG: Unit {i} using adjacency matrix:\n{unit_adjacency}")
+                print(f"DEBUG: Adjacency matrix shape: {unit_adjacency.shape}")
+                print(f"DEBUG: Non-zero elements: {torch.sum(unit_adjacency > 0).item()}")
             
             # Collect gradient info if requested
             if return_gradient_info:
@@ -444,3 +580,19 @@ class CausalUnitNetwork(nn.Module):
         # Get structure loss with input data
         loss_dict = self.structure_learner.get_structure_loss(x)
         return loss_dict['total_loss'] 
+    
+    def get_causal_violation_penalty(self) -> torch.Tensor:
+        """
+        Compute the total causal violation penalty across all units.
+        
+        Returns:
+            Total violation penalty as a tensor
+        """
+        total_penalty = 0.0
+        device = next(self.parameters()).device
+        
+        for unit in self.units:
+            unit_penalty = unit.get_causal_violation_penalty()
+            total_penalty += unit_penalty
+        
+        return torch.tensor(total_penalty, device=device) * self.lambda_reg

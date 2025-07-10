@@ -1,0 +1,37 @@
+{
+  "baseline_results": {
+    "model_name": "Baseline",
+    "accuracy": 1.0,
+    "final_loss": 0.4258275479078293,
+    "training_losses": [
+      0.7384893953800201,
+      0.6760729432106019,
+      0.5631826877593994,
+      0.5085597544908523,
+      0.4258275479078293
+    ],
+    "causal_stats": {}
+  },
+  "causal_results": {
+    "model_name": "Aggressive Causal",
+    "accuracy": 0.9750000238418579,
+    "final_loss": 0.5043399780988693,
+    "training_losses": [
+      0.718547260761261,
+      0.7035296797752381,
+      0.6055593490600586,
+      0.5847967028617859,
+      0.5043399780988693
+    ],
+    "causal_stats": {
+      "forward_count": 51,
+      "intervention_count": 41,
+      "intervention_rate": 0.803921568627451,
+      "avg_intervention_magnitude": 8.96965017551329,
+      "alpha_mean": 0.6225693821907043,
+      "alpha_std": 0.018955910578370094
+    }
+  },
+  "comparison": {
+    "accuracy_difference": -0.02499997615814209,
+    "logit_difference": 
